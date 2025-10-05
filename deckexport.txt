@@ -1,0 +1,86 @@
+1 Galadriel of Lothlórien (LTR) 446 *F*
+1 Ancestral Vision (TSR) 52
+1 Ancient Greenwarden (J25) 627
+1 Argoth, Sanctum of Nature (BRO) 256
+1 Arwen Undómiel (LTR) 194
+1 Ashaya, Soul of the Wild (DSC) 170
+1 Avenger of Zendikar (DDP) 1 *F*
+1 Birthday Escape (LTR) 43
+1 Botanical Sanctum (POTJ) 267s *F*
+1 Breeding Pool (RVR) 275
+1 Budoka Gardener / Dokai, Weaver of Life (PLST) CHK-202
+1 Burgeoning (CN2) 178
+1 Celeborn the Wise (LTR) 156
+1 Command Tower (LCC) 325
+1 Dark Depths (V16) 4 *F*
+1 Delighted Halfling (LTR) 402 *F*
+1 Dryad of the Ilysian Grove (PLST) THB-169
+1 Elrond, Lord of Rivendell (LTR) 307 *F*
+1 Elrond, Master of Healing (LTR) 447
+1 Elven Farsight (LTR) 161 *F*
+1 Elvish Mystic (M14) 169
+1 Expropriate (PLST) CN2-30
+1 Fabled Passage (BLB) 252
+1 Fall of Gil-galad (LTR) 165
+1 Flooded Grove (OTC) 297
+1 Heroic Intervention (PIP) 202
+1 Hinterland Harbor (LCC) 336
+1 Inherited Envelope (LTR) 242 *F*
+1 Jace, Mirror Mage (CMM) 852
+1 Kasmina, Enigma Sage (STX) 196
+1 Kenessos, Priest of Thassa (J22) 13
+1 Llanowar Elves (FDN) 227
+1 Llanowar Scout (DOM) 170
+1 Lost Isle Calling (LTR) 444 *F*
+1 Lotus Cobra (J25) 685
+1 Marit Lage's Slumber (J22) 319
+1 Mazemind Tome (PLST) M21-232
+1 Mirrorpool (OGW) 174
+1 Narset, Parter of Veils (WAR) 61
+1 Nature's Lore (MKC) 178
+1 Nissa, Resurgent Animist (MAT) 122 *E*
+1 Nissa, Steward of Elements (M3C) 270
+1 Nissa, Who Shakes the World (BLC) 84
+1 Oracle of Mul Daya (2X2) 154
+1 Palantír of Orthanc (LTR) 381
+1 Path of Ancestry (CMM) 661 *F*
+1 Plea for Power (LTC) 195
+1 Preordain (CMR) 84
+1 Quandrix Campus (DSC) 294
+1 Ranger's Path (M13) 186
+1 Rangers of Ithilien (LTR) 353
+1 Re-Roll (SLD) 1036
+1 Reason / Believe (HOU) 154
+1 Reliquary Tower (BRC) 196
+1 Retreat to Coralhelm (SLD) 407 *F*
+1 Rivendell (LTR) 344 *F*
+1 Roil Elemental (ZEN) 62
+1 Scute Swarm (ZNR) 203
+1 Serum Visions (SLD) 30 *F*
+1 Simic Growth Chamber (LCC) 352
+1 Skyshroud Ranger (TMP) 256
+8 Snow-Covered Forest (KHM) 284
+8 Snow-Covered Island (KHM) 279
+1 Sol Ring (PIP) 239
+1 Soothing of Sméagol (LTR) 70
+1 Spelunking (LCI) 213
+1 Springbloom Druid (TDC) 271
+1 Strip Mine (4ED) 363
+1 Study Hall (C21) 80
+1 Swan Song (SLD) 91
+1 Tatyova, Benthic Druid (CMM) 687
+1 Temple of Mystery (LCC) 357
+1 Thassa, God of the Sea (SLD) 71 *F*
+1 The Grey Havens (LTR) 443 *F*
+1 The Ring Goes South (LTR) 186 *F*
+1 The Temporal Anchor (BRO) 82
+1 Thespian's Stage (M3C) 395
+1 Tireless Tracker (SLD) 1094 *F*
+1 Titania, Voice of Gaea (BRO) 193
+1 Unstable Harmonics (SLD) 478
+1 Vineglimmer Snarl (M3C) 405
+1 Wasteland (MB2) 115
+1 Wood Elves (LTC) 263
+1 Wrenn and Realmbreaker (PMOM) 217p *F*
+1 Yavimaya Coast (ORI) 252
+1 Zendikar's Roil (ORI) 209

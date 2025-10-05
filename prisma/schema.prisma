@@ -1,0 +1,37 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Card {
+  id         String  @id @default(cuid())
+  name       String
+  manaCost   String?
+  cmc        Float
+  colors     String
+  type_line  String
+  oracleText String?
+  power      String?
+  toughness  String?
+  setName    String
+  rarity     String
+  imageUrl   String?
+  quantity   Int     @default(1)
+
+  @@unique([name, setName], map: "name_set_unique")
+}
+
+model DeckCache {
+  id        String   @id @default(cuid())
+  url       String   @unique
+  source    String
+  data      Json
+  fetchedAt DateTime @default(now())
+}
