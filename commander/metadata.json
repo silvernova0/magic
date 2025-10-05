@@ -1,0 +1,5 @@
+{
+  "name": "Copy of MTG AI Commander Deck Builder",
+  "description": "Provide your Magic: The Gathering card collection, a deck theme, and a desired power level, and let AI build you a custom 100-card Commander deck.",
+  "requestFramePermissions": []
+}

@@ -10,22 +10,40 @@ datasource db {
   url      = "file:./dev.db"
 }
 
-model Card {
-  id         String  @id @default(cuid())
-  name       String
-  manaCost   String?
-  cmc        Float
-  colors     String
-  type_line  String
-  oracleText String?
-  power      String?
-  toughness  String?
-  setName    String
-  rarity     String
-  imageUrl   String?
-  quantity   Int     @default(1)
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  password    String
+  createdAt   DateTime     @default(now())
+  collections Collection[]
+}
 
-  @@unique([name, setName], map: "name_set_unique")
+model Collection {
+  id     String @id @default(cuid())
+  name   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  cards  Card[]
+}
+
+model Card {
+  id           String     @id @default(cuid())
+  name         String
+  manaCost     String?
+  cmc          Float
+  colors       String
+  type_line    String
+  oracleText   String?
+  power        String?
+  toughness    String?
+  setName      String
+  rarity       String
+  imageUrl     String?
+  quantity     Int        @default(1)
+  collection   Collection @relation(fields: [collectionId], references: [id])
+  collectionId String
+
+  @@unique([name, setName, collectionId], map: "name_set_collection_unique")
 }
 
 model DeckCache {
