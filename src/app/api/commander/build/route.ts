@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import type { Decklist } from '@/types';
+import prisma from '../../../../lib/db';
+import { getDefaultUser } from '../../../../lib/user';
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable not set');
@@ -105,7 +107,18 @@ export async function POST(req: NextRequest) {
         throw new Error("The generated decklist is missing a commander.");
     }
 
-    return NextResponse.json(decklist);
+    const user = await getDefaultUser();
+    const newDeck = await prisma.deck.create({
+      data: {
+        name: `New ${theme} Deck`,
+        theme,
+        powerLevel,
+        decklist: decklist as any,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json({ deck: newDeck, decklist });
   } catch (error) {
     console.error("Error generating or parsing decklist:", error);
     return NextResponse.json({ error: "Failed to generate a valid deck. The model might be busy or the request was invalid. Please try again with a more detailed collection or theme." }, { status: 500 });
