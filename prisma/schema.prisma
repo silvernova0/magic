@@ -10,40 +10,17 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+enum DeckStatus {
+  GENERATED
+  SAVED
+}
+
 model User {
   id          String       @id @default(cuid())
   email       String       @unique
   password    String
   createdAt   DateTime     @default(now())
-  collections Collection[]
-}
-
-model Collection {
-  id     String @id @default(cuid())
-  name   String
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
-  cards  Card[]
-}
-
-model Card {
-  id           String     @id @default(cuid())
-  name         String
-  manaCost     String?
-  cmc          Float
-  colors       String
-  type_line    String
-  oracleText   String?
-  power        String?
-  toughness    String?
-  setName      String
-  rarity       String
-  imageUrl     String?
-  quantity     Int        @default(1)
-  collection   Collection @relation(fields: [collectionId], references: [id])
-  collectionId String
-
-  @@unique([name, setName, collectionId], map: "name_set_collection_unique")
+  decks       Deck[]
 }
 
 model DeckCache {
@@ -52,4 +29,18 @@ model DeckCache {
   source    String
   data      Json
   fetchedAt DateTime @default(now())
+}
+
+model Deck {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  theme       String
+  powerLevel  String
+  decklist    Json
+  status      DeckStatus @default(GENERATED)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  user        User       @relation(fields: [userId], references: [id])
+  userId      String
 }

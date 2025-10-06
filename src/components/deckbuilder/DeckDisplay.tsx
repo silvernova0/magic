@@ -4,15 +4,17 @@ import type { Decklist, CardCategory } from '@/types';
 
 interface DeckDisplayProps {
   decklist: Decklist;
+  initialDeckName: string;
+  isSaved: boolean;
 }
 
 const CATEGORY_ORDER: CardCategory[] = [
-  'commander', 'creatures', 'planeswalkers', 'sorceries', 
+  'commander', 'creatures', 'planeswalkers', 'sorceries',
   'instants', 'artifacts', 'enchantments', 'lands'
 ];
 
-const CategoryDisplay: React.FC<{ title: string; cards: string[] }> = ({ title, cards }) => {
-  if (cards.length === 0) return null;
+const CategoryDisplay: React.FC<{ title: string; cards: string[] | undefined }> = ({ title, cards }) => {
+  if (!cards || cards.length === 0) return null;
 
   const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1);
 
@@ -32,20 +34,27 @@ const CategoryDisplay: React.FC<{ title: string; cards: string[] }> = ({ title, 
   );
 };
 
-const DeckDisplay: React.FC<DeckDisplayProps> = ({ decklist }) => {
-  const totalCards = Object.values(decklist).reduce((sum, category) => sum + category.length, 0);
+const DeckDisplay: React.FC<DeckDisplayProps> = ({ decklist, initialDeckName, isSaved }) => {
+  const totalCards = Object.values(decklist).reduce((sum, category) => sum + (category?.length || 0), 0);
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex-shrink-0 mb-4 pb-4 border-b border-gray-700">
-        <h2 className="text-2xl font-bold text-center text-gray-100">Your Custom Deck</h2>
+        <div className="flex justify-center items-center gap-4">
+          <h2 className="text-2xl font-bold text-center text-gray-100">{initialDeckName}</h2>
+          {isSaved && (
+            <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+              Saved
+            </span>
+          )}
+        </div>
         <p className="text-center text-gray-400">Total Cards: {totalCards}</p>
       </div>
       <div className="flex-grow overflow-y-auto pr-2">
         <div className="columns-2 md:columns-3 gap-6">
-            {CATEGORY_ORDER.map(category => (
-                <CategoryDisplay key={category} title={category} cards={decklist[category]} />
-            ))}
+          {CATEGORY_ORDER.map(category => (
+            <CategoryDisplay key={category} title={category} cards={decklist[category]} />
+          ))}
         </div>
       </div>
     </div>

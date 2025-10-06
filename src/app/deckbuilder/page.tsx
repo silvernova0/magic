@@ -1,13 +1,15 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import type { Decklist } from '@/types';
+import type { Deck, Decklist } from '@/types';
 import Header from '@/components/deckbuilder/Header';
 import DeckBuilderForm from '@/components/deckbuilder/DeckBuilderForm';
 import DeckDisplay from '@/components/deckbuilder/DeckDisplay';
 import LoadingSpinner from '@/components/deckbuilder/LoadingSpinner';
+import SaveDeckForm from '@/components/deckbuilder/SaveDeckForm';
 
 const DeckBuilderPage: React.FC = () => {
+  const [deck, setDeck] = useState<Deck | null>(null);
   const [decklist, setDecklist] = useState<Decklist | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +18,7 @@ const DeckBuilderPage: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setDecklist(null);
+    setDeck(null);
     try {
       const response = await fetch('/api/commander/build', {
         method: 'POST',
@@ -31,7 +34,8 @@ const DeckBuilderPage: React.FC = () => {
       }
 
       const result = await response.json();
-      setDecklist(result);
+      setDeck(result.deck);
+      setDecklist(result.decklist);
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Check the console for details.');
@@ -39,6 +43,10 @@ const DeckBuilderPage: React.FC = () => {
       setIsLoading(false);
     }
   }, []);
+
+  const handleDeckSaved = (updatedDeck: Deck) => {
+    setDeck(updatedDeck);
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans p-4 sm:p-6 lg:p-8">
@@ -66,7 +74,14 @@ const DeckBuilderPage: React.FC = () => {
                   <p>{error}</p>
                 </div>
               )}
-              {decklist && !isLoading && <DeckDisplay decklist={decklist} />}
+              {deck && decklist && !isLoading && (
+                <>
+                  <DeckDisplay decklist={decklist} initialDeckName={deck.name} isSaved={deck.status === 'SAVED'} />
+                  {deck.status === 'GENERATED' && (
+                    <SaveDeckForm deckId={deck.id} onDeckSaved={handleDeckSaved} />
+                  )}
+                </>
+              )}
               {!decklist && !isLoading && !error && (
                 <div className="m-auto text-center text-gray-400">
                   <p className="text-xl">Your generated deck will appear here.</p>
