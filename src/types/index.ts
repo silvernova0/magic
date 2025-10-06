@@ -1,9 +1,13 @@
-import type { Deck as PrismaDeck } from '@prisma/client';
 
-export type CardCategory = 'commander' | 'creatures' | 'planeswalkers' | 'sorceries' | 'instants' | 'artifacts' | 'enchantments' | 'lands';
+export interface Decklist {
+  commander: string[];
+  creatures: string[];
+  sorceries: string[];
+  instants: string[];
+  artifacts: string[];
+  enchantments: string[];
+  planeswalkers: string[];
+  lands: string[];
+}
 
-export type Decklist = {
-  [key in CardCategory]?: string[];
-};
-
-export type Deck = PrismaDeck;
+export type CardCategory = keyof Decklist;

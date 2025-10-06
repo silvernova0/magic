@@ -1,18 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "sqlite"
   url      = "file:./dev.db"
 }
 
-enum DeckStatus {
-  GENERATED
-  SAVED
+generator client {
+  provider = "prisma-client-js"
 }
 
 model User {
@@ -21,14 +13,6 @@ model User {
   password    String
   createdAt   DateTime     @default(now())
   decks       Deck[]
-}
-
-model DeckCache {
-  id        String   @id @default(cuid())
-  url       String   @unique
-  source    String
-  data      Json
-  fetchedAt DateTime @default(now())
 }
 
 model Deck {
@@ -43,4 +27,17 @@ model Deck {
   updatedAt   DateTime   @updatedAt
   user        User       @relation(fields: [userId], references: [id])
   userId      String
+}
+
+enum DeckStatus {
+  GENERATED
+  SAVED
+}
+
+model DeckCache {
+  id        String   @id @default(cuid())
+  url       String   @unique
+  source    String
+  data      Json
+  fetchedAt DateTime @default(now())
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI, Type } from '@google/genai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, Part } from '@google/generative-ai';
 import type { Decklist } from '@/types';
 import prisma from '../../../../lib/db';
 import { getDefaultUser } from '../../../../lib/user';
@@ -8,54 +8,38 @@ if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable not set');
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const DECK_SCHEMA = {
-    type: Type.OBJECT,
-    properties: {
-      commander: {
-        type: Type.ARRAY,
-        description: "The commander(s) of the deck. Must be 1-2 legendary creature cards.",
-        items: { type: Type.STRING }
-      },
-      creatures: {
-        type: Type.ARRAY,
-        description: "All non-commander creature cards in the deck.",
-        items: { type: Type.STRING }
-      },
-      sorceries: {
-        type: Type.ARRAY,
-        description: "All sorcery cards in the deck.",
-        items: { type: Type.STRING }
-      },
-      instants: {
-        type: Type.ARRAY,
-        description: "All instant cards in the deck.",
-        items: { type: Type.STRING }
-      },
-      artifacts: {
-        type: Type.ARRAY,
-        description: "All non-creature artifact cards in the deck.",
-        items: { type: Type.STRING }
-      },
-      enchantments: {
-        type: Type.ARRAY,
-        description: "All non-creature enchantment cards in the deck.",
-        items: { type: Type.STRING }
-      },
-      planeswalkers: {
-        type: Type.ARRAY,
-        description: "All planeswalker cards in the deck.",
-        items: { type: Type.STRING }
-      },
-      lands: {
-        type: Type.ARRAY,
-        description: "All land cards in the deck. Typically 35-40 cards.",
-        items: { type: Type.STRING }
-      }
-    },
-    required: ["commander", "creatures", "sorceries", "instants", "artifacts", "enchantments", "planeswalkers", "lands"]
-  };
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+});
+
+const generationConfig = {
+  temperature: 1,
+  topP: 0.95,
+  topK: 64,
+  maxOutputTokens: 8192,
+  responseMimeType: "application/json",
+};
+
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+];
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,7 +54,7 @@ export async function POST(req: NextRequest) {
 - Prioritize cards that fit the requested theme and power level.
 - If the collection lacks key cards for the theme, you may suggest a few essential cards not in the collection, but clearly mark them by appending "(suggested)" to the card name.
 - The final decklist must total exactly 100 cards.
-- Return the complete decklist in the specified JSON format. Do not include any explanatory text outside of the JSON structure.`
+- Return the complete decklist in the specified JSON format. Do not include any explanatory text outside of the JSON structure.`;
 
     const prompt = `
       Please build a Commander deck with the following specifications:
@@ -82,18 +66,11 @@ export async function POST(req: NextRequest) {
       ${collection}
       ---
     `;
-
-    const result = await ai.getGenerativeModel({ model: "gemini-1.5-flash",
-    systemInstruction: {
-      role: "model",
-      parts: [{text: systemInstruction}]
-  }
-  }).generateContent({contents: [{ role: "user", parts: [{ text: prompt }] }],
-    generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema: DECK_SCHEMA,
-    },
-});
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig,
+      safetySettings,
+    });
 
     const jsonText = result.response.text();
     const decklist: Decklist = JSON.parse(jsonText);

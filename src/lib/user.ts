@@ -1,13 +1,20 @@
 import prisma from "./db";
 
 export async function getDefaultUser() {
-  const user = await prisma.user.upsert({
-    where: { email: "default-user@example.com" },
-    update: {},
-    create: {
-      email: "default-user@example.com",
-      password: "password",
+  const user = await prisma.user.findUnique({
+    where: {
+      email: 'user@example.com',
     },
   });
-  return user;
+
+  if (user) {
+    return user;
+  }
+
+  return await prisma.user.create({
+    data: {
+      email: 'user@example.com',
+      password: 'password',
+    },
+  });
 }

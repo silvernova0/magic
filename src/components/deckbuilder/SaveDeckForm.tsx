@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import type { Deck } from '@/types';
+import type { Deck } from '@prisma/client';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface SaveDeckFormProps {
   deckId: string;
