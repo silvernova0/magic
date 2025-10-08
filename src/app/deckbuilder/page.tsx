@@ -1,18 +1,21 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import type { Deck, Decklist } from '@/types';
-import Header from '@/components/deckbuilder/Header';
-import DeckBuilderForm from '@/components/deckbuilder/DeckBuilderForm';
-import DeckDisplay from '@/components/deckbuilder/DeckDisplay';
-import LoadingSpinner from '@/components/deckbuilder/LoadingSpinner';
-import SaveDeckForm from '@/components/deckbuilder/SaveDeckForm';
+import type { Deck, Decklist } from '../../types';
+import Header from '../../components/deckbuilder/Header';
+import DeckBuilderForm from '../../components/deckbuilder/DeckBuilderForm';
+import DeckDisplay from '../../components/deckbuilder/DeckDisplay';
+import LoadingSpinner from '../../components/deckbuilder/LoadingSpinner';
+import SaveDeckForm from '../../components/deckbuilder/SaveDeckForm';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const DeckBuilderPage: React.FC = () => {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [decklist, setDecklist] = useState<Decklist | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleBuildDeck = useCallback(async (collection: string, theme: string, powerLevel: string) => {
     setIsLoading(true);
