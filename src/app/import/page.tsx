@@ -8,10 +8,9 @@ import {
 } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import Papa from 'papaparse';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { fetchScryfallCard } from '@/lib/scryfall';
 
-const prisma = new PrismaClient();
 
 export default async function ImportPage() {
   // Server action for importing collection CSV

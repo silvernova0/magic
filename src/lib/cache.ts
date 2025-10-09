@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma';
 
 // Simple rate limiter: allow one request per `intervalMs` by waiting between calls
 let lastFetch = 0;

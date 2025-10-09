@@ -1,4 +1,4 @@
-import prisma from "./db";
+import { prisma } from "./prisma";
 
 export async function getDefaultUser() {
   const user = await prisma.user.findUnique({

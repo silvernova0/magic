@@ -1,4 +1,4 @@
-import prisma from '../../lib/db';
+import { prisma } from '@/lib/prisma';
 import { getDefaultUser } from '../../lib/user';
 import { Deck, DeckStatus } from '@prisma/client';
 import Link from 'next/link';

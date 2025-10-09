@@ -1,59 +1,42 @@
-
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import type { Decklist } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("GEMINI_API_KEY environment variable not set");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const DECK_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    commander: {
-      type: Type.ARRAY,
-      description: "The commander(s) of the deck. Must be 1-2 legendary creature cards.",
-      items: { type: Type.STRING }
-    },
-    creatures: {
-      type: Type.ARRAY,
-      description: "All non-commander creature cards in the deck.",
-      items: { type: Type.STRING }
-    },
-    sorceries: {
-      type: Type.ARRAY,
-      description: "All sorcery cards in the deck.",
-      items: { type: Type.STRING }
-    },
-    instants: {
-      type: Type.ARRAY,
-      description: "All instant cards in the deck.",
-      items: { type: Type.STRING }
-    },
-    artifacts: {
-      type: Type.ARRAY,
-      description: "All non-creature artifact cards in the deck.",
-      items: { type: Type.STRING }
-    },
-    enchantments: {
-      type: Type.ARRAY,
-      description: "All non-creature enchantment cards in the deck.",
-      items: { type: Type.STRING }
-    },
-    planeswalkers: {
-      type: Type.ARRAY,
-      description: "All planeswalker cards in the deck.",
-      items: { type: Type.STRING }
-    },
-    lands: {
-      type: Type.ARRAY,
-      description: "All land cards in the deck. Typically 35-40 cards.",
-      items: { type: Type.STRING }
-    }
-  },
-  required: ["commander", "creatures", "sorceries", "instants", "artifacts", "enchantments", "planeswalkers", "lands"]
+const model = genAI.getGenerativeModel({
+  model: "gemini-1.5-flash",
+});
+
+const generationConfig = {
+    temperature: 1,
+    topP: 0.95,
+    topK: 64,
+    maxOutputTokens: 8192,
+    responseMimeType: "application/json",
 };
+
+const safetySettings = [
+  {
+    category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+  {
+    category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    threshold: HarmBlockThreshold.BLOCK_NONE,
+  },
+];
 
 export const buildCommanderDeck = async (
   collection: string,
@@ -79,21 +62,17 @@ export const buildCommanderDeck = async (
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: DECK_SCHEMA,
-      },
-    });
+    const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig,
+        safetySettings,
+      });
 
-    const jsonText = response.text.trim();
+    const jsonText = result.response.text();
     const decklist: Decklist = JSON.parse(jsonText);
     
     // Simple validation
-    const totalCards = Object.values(decklist).reduce((sum, category) => sum + category.length, 0);
+    const totalCards = Object.values(decklist).reduce((sum, category) => sum + (category?.length || 0), 0);
     if (totalCards < 90 || totalCards > 105) { // Allow some leeway
         console.warn(`Generated deck has ${totalCards} cards, which is not 100. The model may have made a mistake.`);
     }

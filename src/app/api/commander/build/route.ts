@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, Part } from '@google/generative-ai';
 import type { Decklist } from '@/types';
-import prisma from '../../../../lib/db';
+import { prisma } from '@/lib/prisma';
 import { getDefaultUser } from '../../../../lib/user';
 
 if (!process.env.GEMINI_API_KEY) {
