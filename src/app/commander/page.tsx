@@ -85,44 +85,82 @@ export default function CommanderPage() {
   }
 
   return (
-    <main className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-4">Commander Deck Search</h1>
+    <div className="container mx-auto max-w-7xl">
+      {/* Hero Header */}
+      <div className="mb-8 p-8 rounded-xl bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20">
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          Commander Deck Search
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Discover popular Commander decks from EDHREC and MTGTop8
+        </p>
+      </div>
 
-      <form onSubmit={searchCommander} className="flex gap-2 mb-6">
-        <input
-          className="bg-white/5 rounded px-3 py-2 flex-1"
-          placeholder="Enter commander name (e.g. Tatyova, Benthic Druid)"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <Button type="submit">Search</Button>
-      </form>
+      <Card className="mb-6 border-2">
+        <CardContent className="pt-6">
+          <form onSubmit={searchCommander} className="flex gap-2">
+            <input
+              className="bg-background border-2 border-input hover:border-purple-500/50 focus:border-purple-500 transition-colors rounded-lg px-4 py-3 flex-1 text-lg"
+              placeholder="Enter commander name (e.g. Tatyova, Benthic Druid)"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <Button type="submit" size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+              Search
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {suggestions.length > 0 && (
-        <div className="mb-4">
-          <h4 className="text-sm text-muted-foreground mb-2">Suggestions</h4>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((s: any) => (
-              <button key={s.name} className="px-2 py-1 bg-white/5 rounded" onClick={() => { setQuery(s.name); setSuggestions([]); searchCommander(); }}>
-                {s.name} {s.set_name ? `(${s.set_name})` : ''}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Card className="mb-6 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+          <CardContent className="pt-6">
+            <h4 className="text-sm font-semibold text-muted-foreground mb-3">💡 Card Suggestions</h4>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((s: any) => (
+                <button 
+                  key={s.name} 
+                  className="px-4 py-2 bg-background border-2 border-blue-500/30 hover:border-blue-500 rounded-lg transition-all hover:scale-105 hover:shadow-lg"
+                  onClick={() => { setQuery(s.name); setSuggestions([]); searchCommander(); }}
+                >
+                  <span className="font-medium">{s.name}</span>
+                  {s.set_name && <span className="text-muted-foreground text-sm ml-2">({s.set_name})</span>}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
-      {loading && <p>Searching EDHREC...</p>}
-      {error && <p className="text-red-400">{error}</p>}
+      {loading && (
+        <Card className="border-2 border-purple-500/50">
+          <CardContent className="py-12 text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent mb-4"></div>
+            <p className="text-lg text-purple-600 font-medium">Searching EDHREC...</p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {error && (
+        <Card className="border-2 border-red-500/50 bg-red-500/10">
+          <CardContent className="py-8 text-center">
+            <p className="text-red-500 text-lg font-medium">⚠️ {error}</p>
+          </CardContent>
+        </Card>
+      )}
 
       {results && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="border-2 hover:border-purple-500/50 transition-all">
             <CardHeader>
-              <CardTitle>Discovered Links</CardTitle>
-              <CardDescription>External deck links found on EDHREC</CardDescription>
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <span>🔗</span>
+                Discovered Links
+              </CardTitle>
+              <CardDescription className="text-base">External deck links found on EDHREC</CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="list-disc pl-6 space-y-2">
+              <ul className="space-y-2">
                 {results.links && results.links.length ? (
                   results.links.map((l: string) => (
                     <li key={l} className="truncate">
@@ -175,6 +213,6 @@ export default function CommanderPage() {
       )}
 
       <ImportReviewModal deck={modalDeck} onClose={() => setModalDeck(null)} onImport={confirmImport} />
-    </main>
+    </div>
   );
 }

@@ -113,48 +113,120 @@ export default async function ImportPage() {
   }
 
   return (
-    <main className="container mx-auto p-4">
-      <h1 className="text-4xl font-bold mb-8">Import / Export</h1>
+    <div className="container mx-auto max-w-7xl">
+      {/* Hero Header */}
+      <div className="mb-8 p-8 rounded-xl bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20">
+        <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          Import / Export
+        </h1>
+        <p className="text-lg text-muted-foreground">
+          Quickly import your collection and decklists
+        </p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <Card>
+        <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-500/50">
           <CardHeader>
-            <CardTitle>Import Collection</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2 group-hover:text-purple-600 transition-colors">
+              <span className="text-3xl">📚</span>
+              Import Collection
+            </CardTitle>
+            <CardDescription className="text-base">
               Paste your collection data here. The expected format is a CSV with "Count" and "Name" columns.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form action={importCollection} className="flex flex-col">
-              <Textarea name="collection" placeholder="Paste your collection data here..." className="min-h-[200px] mb-4" />
-              <label className="flex items-center gap-2 mb-4">
-                <input type="checkbox" name="enrich" />
-                <span>Enrich with Scryfall data</span>
+              <Textarea 
+                name="collection" 
+                placeholder="Count,Name,Edition
+1,Sol Ring,Commander 2021
+4,Lightning Bolt,Alpha
+..." 
+                className="min-h-[250px] mb-4 font-mono text-sm" 
+              />
+              <label className="flex items-center gap-2 mb-4 cursor-pointer group/check">
+                <input 
+                  type="checkbox" 
+                  name="enrich" 
+                  className="w-4 h-4 cursor-pointer" 
+                />
+                <span className="group-hover/check:text-purple-600 transition-colors">
+                  ✨ Enrich with Scryfall data (slower, but more complete)
+                </span>
               </label>
-              <Button type="submit">Import Collection</Button>
+              <Button type="submit" size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
+                Import Collection
+              </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-indigo-500/50">
           <CardHeader>
-            <CardTitle>Import Deck</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl flex items-center gap-2 group-hover:text-indigo-600 transition-colors">
+              <span className="text-3xl">🎴</span>
+              Import Deck
+            </CardTitle>
+            <CardDescription className="text-base">
               Paste your decklist here. The expected format is one card per line, like "1 Sol Ring".
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form action={importDeck} className="flex flex-col">
-              <Textarea name="deck" placeholder="Paste your decklist here..." className="min-h-[200px] mb-4" />
-              <label className="flex items-center gap-2 mb-4">
-                <input type="checkbox" name="enrichDeck" />
-                <span>Enrich with Scryfall data</span>
+              <Textarea 
+                name="deck" 
+                placeholder="1 Sol Ring (C21) 314
+1 Command Tower
+4 Lightning Bolt (LEA) 161
+..." 
+                className="min-h-[250px] mb-4 font-mono text-sm" 
+              />
+              <label className="flex items-center gap-2 mb-4 cursor-pointer group/check">
+                <input 
+                  type="checkbox" 
+                  name="enrichDeck" 
+                  className="w-4 h-4 cursor-pointer" 
+                />
+                <span className="group-hover/check:text-indigo-600 transition-colors">
+                  ✨ Enrich with Scryfall data (slower, but more complete)
+                </span>
               </label>
-              <Button type="submit">Import Deck</Button>
+              <Button type="submit" size="lg" className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700">
+                Import Deck
+              </Button>
             </form>
           </CardContent>
         </Card>
       </div>
-    </main>
+
+      {/* Info Cards */}
+      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold text-lg mb-2">💡 CSV Format</h3>
+            <p className="text-sm text-muted-foreground">
+              Collection imports support CSV with Count, Name, and optional Edition columns
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold text-lg mb-2">⚡ Deck Format</h3>
+            <p className="text-sm text-muted-foreground">
+              Deck imports support standard format: "quantity cardname (SET) number"
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+          <CardContent className="pt-6">
+            <h3 className="font-semibold text-lg mb-2">✨ Enrichment</h3>
+            <p className="text-sm text-muted-foreground">
+              Enable enrichment to fetch images, prices, and complete card data from Scryfall
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }

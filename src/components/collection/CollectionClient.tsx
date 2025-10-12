@@ -138,14 +138,25 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
   const uniqueCards = cards.length;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl font-bold">My Collection</h1>
-          <p className="text-muted-foreground mt-2">
-            {totalCards} total cards • {uniqueCards} unique cards
-          </p>
+    <div className="container mx-auto max-w-7xl space-y-6">
+      {/* Hero Header */}
+      <div className="p-8 rounded-xl bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
+              My Collection
+            </h1>
+            <div className="flex flex-wrap gap-4 mt-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-950 rounded-full">
+                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalCards}</span>
+                <span className="text-sm text-purple-700 dark:text-purple-300">total cards</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-950 rounded-full">
+                <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{uniqueCards}</span>
+                <span className="text-sm text-indigo-700 dark:text-indigo-300">unique cards</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -313,44 +324,51 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
           {/* Card Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {filteredCards.map((card) => (
-              <Card key={card.id} className="overflow-hidden">
+              <Card key={card.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-purple-500/50">
                 {card.imageUrl && (
-                  <div className="relative h-48 w-full bg-muted">
+                  <div className="relative h-48 w-full bg-muted overflow-hidden">
                     <img
                       src={card.imageUrl}
                       alt={card.name}
-                      className="object-contain w-full h-full"
+                      className="object-contain w-full h-full group-hover:scale-110 transition-transform duration-300"
                     />
                   </div>
                 )}
                 <CardHeader>
-                  <CardTitle className="text-lg">{card.name}</CardTitle>
+                  <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">{card.name}</CardTitle>
                   <CardDescription>{card.type_line}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Mana Cost:</span>
-                    <span className="font-mono">{card.manaCost || 'N/A'}</span>
+                    <span className="font-mono font-semibold">{card.manaCost || 'N/A'}</span>
                   </div>
                   {card.power && card.toughness && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">P/T:</span>
-                      <span>
+                      <span className="font-semibold">
                         {card.power}/{card.toughness}
                       </span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Set:</span>
-                    <span>{card.setName}</span>
+                    <span className="text-xs">{card.setName}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm items-center">
                     <span className="text-muted-foreground">Rarity:</span>
-                    <span className="capitalize">{card.rarity}</span>
+                    <span className={`capitalize px-2 py-1 rounded-full text-xs font-medium ${
+                      card.rarity === 'mythic' ? 'bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300' :
+                      card.rarity === 'rare' ? 'bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300' :
+                      card.rarity === 'uncommon' ? 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300' :
+                      'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400'
+                    }`}>
+                      {card.rarity}
+                    </span>
                   </div>
-                  <div className="flex justify-between text-sm font-semibold pt-2 border-t">
-                    <span>Quantity:</span>
-                    <span className="text-lg">{card.quantity}x</span>
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="text-sm text-muted-foreground">Quantity:</span>
+                    <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{card.quantity}x</span>
                   </div>
                 </CardContent>
               </Card>
