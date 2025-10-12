@@ -12,10 +12,10 @@ const model = genAI.getGenerativeModel({
 });
 
 const generationConfig = {
-  temperature: 1,
+  temperature: 0.7, // Lower temperature for more consistent format
   topP: 0.95,
-  topK: 64,
-  maxOutputTokens: 8192,
+  topK: 40,
+  maxOutputTokens: 16384, // Increased to handle full response
   responseMimeType: 'application/json',
 };
 
@@ -123,21 +123,31 @@ Bracket 1-2: Sol Ring, Command Tower, Arcane Signet, Cultivate, Swords to Plowsh
 Bracket 3: Rhystic Study, Smothering Tithe, Cyclonic Rift, Demonic Tutor, Mana Drain
 Bracket 4-5: Mana Crypt, Force of Will, Gaea's Cradle, Timetwister, The One Ring, Jeweled Lotus
 
-CRITICAL: You MUST return ONLY a valid JSON object. No markdown, no code blocks, no explanation.
-The JSON structure is:
+OUTPUT FORMAT REQUIREMENTS:
+1. Return ONLY valid JSON - no markdown, no code blocks, no explanation
+2. Each card category must be an array of STRINGS (card names only)
+3. Do NOT include card objects with "name", "set", or "collector_number" fields
+4. Do NOT use nested structures like "mainboard" or "sideboard"
+5. Start with { and end with } - nothing else
+
+REQUIRED JSON STRUCTURE (use EXACTLY this format):
 {
   "commander": ["Commander Name"],
-  "creatures": ["Card Name 1", "Card Name 2", ...],
-  "instants": ["Card Name 1", ...],
-  "sorceries": ["Card Name 1", ...],
-  "artifacts": ["Card Name 1", ...],
-  "enchantments": ["Card Name 1", ...],
-  "planeswalkers": ["Card Name 1", ...],
-  "lands": ["Card Name 1", ...],
+  "creatures": ["Card Name", "Card Name", ...],
+  "instants": ["Card Name", ...],
+  "sorceries": ["Card Name", ...],
+  "artifacts": ["Card Name", ...],
+  "enchantments": ["Card Name", ...],
+  "planeswalkers": ["Card Name", ...],
+  "lands": ["Card Name", ...],
   "description": "Brief deck description",
   "strategy": "How to pilot the deck",
   "keyCards": ["Card 1", "Card 2", "Card 3"]
 }
+
+IMPORTANT: Use simple string arrays for all card lists. Example:
+CORRECT: "creatures": ["Sol Ring", "Birds of Paradise", "Llanowar Elves"]
+WRONG: "creatures": [{"name": "Sol Ring", "set": "LTR"}]
 
 Start your response with { and end with } - nothing else!`;
 
@@ -242,30 +252,52 @@ Build the deck now and return valid JSON only.`;
     
     let decklist: DeckBuildResponse = JSON.parse(cleanedJson);
 
+    // Helper function to convert card objects to string arrays
+    const normalizeCardArray = (cards: any): string[] => {
+      if (!cards) return [];
+      if (!Array.isArray(cards)) return [];
+      
+      return cards.map((card: any) => {
+        // If it's already a string, return as-is
+        if (typeof card === 'string') return card;
+        // If it's an object with a "name" field, extract the name
+        if (card && typeof card === 'object' && card.name) return card.name;
+        // Otherwise try to stringify it
+        return String(card);
+      });
+    };
+
     // Handle nested structure (some responses have "mainboard" wrapper)
     if ((decklist as any).mainboard) {
       console.log('Detected nested mainboard structure, flattening...');
       const mainboard = (decklist as any).mainboard;
       decklist = {
-        commander: Array.isArray((decklist as any).commander) 
-          ? (decklist as any).commander 
-          : typeof (decklist as any).commander === 'string'
-          ? [(decklist as any).commander]
-          : [],
-        creatures: mainboard.creatures || [],
-        instants: mainboard.instants || [],
-        sorceries: mainboard.sorceries || [],
-        artifacts: mainboard.artifacts || [],
-        enchantments: mainboard.enchantments || [],
-        planeswalkers: mainboard.planeswalkers || [],
-        lands: mainboard.lands || [],
+        commander: normalizeCardArray((decklist as any).commander),
+        creatures: normalizeCardArray(mainboard.creatures),
+        instants: normalizeCardArray(mainboard.instants),
+        sorceries: normalizeCardArray(mainboard.sorceries),
+        artifacts: normalizeCardArray(mainboard.artifacts),
+        enchantments: normalizeCardArray(mainboard.enchantments),
+        planeswalkers: normalizeCardArray(mainboard.planeswalkers),
+        lands: normalizeCardArray(mainboard.lands),
         description: (decklist as any).description || '',
         strategy: (decklist as any).strategy || '',
-        keyCards: (decklist as any).keyCards || [],
+        keyCards: normalizeCardArray((decklist as any).keyCards),
       };
+    } else {
+      // Normalize all card arrays even if not nested
+      decklist.commander = normalizeCardArray(decklist.commander);
+      decklist.creatures = normalizeCardArray(decklist.creatures);
+      decklist.instants = normalizeCardArray(decklist.instants);
+      decklist.sorceries = normalizeCardArray(decklist.sorceries);
+      decklist.artifacts = normalizeCardArray(decklist.artifacts);
+      decklist.enchantments = normalizeCardArray(decklist.enchantments);
+      decklist.planeswalkers = normalizeCardArray(decklist.planeswalkers);
+      decklist.lands = normalizeCardArray(decklist.lands);
+      decklist.keyCards = normalizeCardArray(decklist.keyCards);
     }
 
-    // Ensure all card category properties are arrays
+    // Ensure all card category properties are arrays (backup validation)
     decklist.commander = Array.isArray(decklist.commander) 
       ? decklist.commander 
       : typeof decklist.commander === 'string'
