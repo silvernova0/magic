@@ -16,7 +16,7 @@ const generationConfig = {
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
-  responseMimeType: 'application/json',
+  // Note: Not using responseMimeType - let AI return JSON naturally
 };
 
 const safetySettings = [
@@ -121,7 +121,8 @@ Bracket 1-2: Sol Ring, Command Tower, Arcane Signet, Cultivate, Swords to Plowsh
 Bracket 3: Rhystic Study, Smothering Tithe, Cyclonic Rift, Demonic Tutor, Mana Drain
 Bracket 4-5: Mana Crypt, Force of Will, Gaea's Cradle, Timetwister, The One Ring, Jeweled Lotus
 
-Return ONLY valid JSON with this structure:
+CRITICAL: You MUST return ONLY a valid JSON object. No markdown, no code blocks, no explanation.
+The JSON structure is:
 {
   "commander": ["Commander Name"],
   "creatures": ["Card Name 1", "Card Name 2", ...],
@@ -134,7 +135,9 @@ Return ONLY valid JSON with this structure:
   "description": "Brief deck description",
   "strategy": "How to pilot the deck",
   "keyCards": ["Card 1", "Card 2", "Card 3"]
-}`;
+}
+
+Start your response with { and end with } - nothing else!`;
 
   // Build the user prompt
   let prompt = `Build a Commander deck with these specifications:
@@ -194,7 +197,9 @@ Build the deck now and return valid JSON only.`;
     }
 
     const jsonText = response.text();
-    console.log('Raw Gemini response:', jsonText.substring(0, 500)); // Log first 500 chars for debugging
+    console.log('Raw Gemini response length:', jsonText.length);
+    console.log('Raw Gemini response preview:', jsonText.substring(0, 200));
+    console.log('Raw Gemini response end:', jsonText.substring(Math.max(0, jsonText.length - 200)));
     
     // Try to parse JSON, handle potential code blocks
     let cleanedJson = jsonText.trim();
