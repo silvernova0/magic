@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { fetchScryfallCard } from '@/lib/scryfall';
-
+import { getCurrentUser } from '@/lib/user';
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { deck, enrich = true } = body;
     if (!deck || !deck.cards) return NextResponse.json({ error: 'Invalid deck' }, { status: 400 });
+
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     let importedCount = 0;
     for (const c of deck.cards) {
@@ -21,11 +26,11 @@ export async function POST(req: Request) {
 
       const setName = scry?.set_name || deck.url || '';
 
-      const existing = await prisma.card.findFirst({ where: { name, setName } });
+      const existing = await prisma.userCard.findFirst({ where: { name, setName, userId: user.id } });
       if (existing) {
-        await prisma.card.update({ where: { id: existing.id }, data: { quantity: existing.quantity + qty } });
+        await prisma.userCard.update({ where: { id: existing.id }, data: { quantity: existing.quantity + qty } });
       } else {
-        await prisma.card.create({ data: {
+        await prisma.userCard.create({ data: {
           name,
           manaCost: scry?.mana_cost || '',
           cmc: scry?.cmc || 0,
@@ -38,6 +43,7 @@ export async function POST(req: Request) {
           rarity: scry?.rarity || '',
           imageUrl: scry?.image_uri || '',
           quantity: qty,
+          userId: user.id,
         } });
       }
 

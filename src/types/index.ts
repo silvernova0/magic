@@ -1,3 +1,7 @@
+import type { Deck, DeckStatus } from '@prisma/client';
+
+export type { Deck, DeckStatus };
+
 
 export interface Decklist {
   commander: string[];

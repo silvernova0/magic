@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, Part } from '@google/generative-ai';
 import type { Decklist } from '@/types';
 import { prisma } from '@/lib/prisma';
-import { getDefaultUser } from '../../../../lib/user';
+import { getCurrentUser } from '../../../../lib/user';
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable not set');
@@ -43,6 +43,11 @@ const safetySettings = [
 
 export async function POST(req: NextRequest) {
   try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'You must be logged in to build a deck.' }, { status: 401 });
+    }
+
     const { collection, theme, powerLevel } = await req.json();
 
     if (!collection || !theme || !powerLevel) {
@@ -84,7 +89,6 @@ export async function POST(req: NextRequest) {
         throw new Error("The generated decklist is missing a commander.");
     }
 
-    const user = await getDefaultUser();
     const newDeck = await prisma.deck.create({
       data: {
         name: `New ${theme} Deck`,
@@ -101,3 +105,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to generate a valid deck. The model might be busy or the request was invalid. Please try again with a more detailed collection or theme." }, { status: 500 });
   }
 }
+

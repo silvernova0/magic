@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { getDefaultUser } from '../lib/user';
+import { getCurrentUser } from '../lib/user';
 import { Deck, DeckStatus } from '@prisma/client';
 import Link from 'next/link';
 import {
@@ -12,7 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 async function getDecks(): Promise<Deck[]> {
-  const user = await getDefaultUser();
+  const user = await getCurrentUser();
   if (!user) {
     return [];
   }

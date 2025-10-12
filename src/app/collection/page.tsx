@@ -12,14 +12,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
-
+import { getCurrentUser } from "@/lib/user";
 
 export default async function CollectionPage() {
-  const cards = await prisma.card.findMany();
+  const user = await getCurrentUser();
+  if (!user) {
+    return <div>Please log in to view your collection.</div>;
+  }
+  const cards = await prisma.userCard.findMany({ where: { userId: user.id } });
 
   async function addCard(formData: FormData) {
     "use server";
+
+    const user = await getCurrentUser();
+    if (!user) {
+      throw new Error("User not found");
+    }
 
     const name = formData.get("name") as string;
     const manaCost = formData.get("manaCost") as string;
@@ -34,7 +42,7 @@ export default async function CollectionPage() {
     const imageUrl = formData.get("imageUrl") as string;
     const quantity = parseInt(formData.get("quantity") as string);
 
-    await prisma.card.create({
+    await prisma.userCard.create({
       data: {
         name,
         manaCost,
@@ -48,6 +56,7 @@ export default async function CollectionPage() {
         rarity,
         imageUrl,
         quantity,
+        userId: user.id,
       },
     });
 
