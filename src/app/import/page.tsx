@@ -18,6 +18,12 @@ export default async function ImportPage() {
   async function importCollection(formData: FormData) {
     'use server';
     const user = await getCurrentUser();
+    if (!user) throw new Error('User not found');
+    
+    const text = formData.get('collection') as string;
+    const enrich = formData.get('enrich') === 'on';
+    if (!text) return;
+    
     const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
     // @ts-ignore
     const data: any[] = parsed.data;
@@ -40,6 +46,18 @@ export default async function ImportPage() {
         await prisma.userCard.update({ where: { id: existing.id }, data: { quantity: existing.quantity + count } });
       } else {
         await prisma.userCard.create({ data: {
+          name,
+          manaCost: scry?.mana_cost || '',
+          cmc: scry?.cmc || 0,
+          colors: (scry?.colors || []).join(','),
+          type_line: scry?.type_line || '',
+          oracleText: scry?.oracle_text || '',
+          power: scry?.power || '',
+          toughness: scry?.toughness || '',
+          setName: scry?.set_name || setName,
+          rarity: scry?.rarity || '',
+          imageUrl: scry?.image_uri || '',
+          quantity: count,
           userId: user.id,
         } });
       }
@@ -54,6 +72,8 @@ export default async function ImportPage() {
     if (!text) return;
 
     const user = await getCurrentUser();
+    if (!user) throw new Error('User not found');
+    
     const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
     for (const line of lines) {
       // Expected formats: "1 Card Name (SET) 123" or "8 Snow-Covered Forest (KHM) 284"
@@ -71,9 +91,9 @@ export default async function ImportPage() {
 
       const existing = await prisma.userCard.findFirst({ where: { name, setName, userId: user.id } });
       if (existing) {
-        await prisma.card.update({ where: { id: existing.id }, data: { quantity: existing.quantity + qty } });
+        await prisma.userCard.update({ where: { id: existing.id }, data: { quantity: existing.quantity + qty } });
       } else {
-        await prisma.card.create({ data: {
+        await prisma.userCard.create({ data: {
           name,
           manaCost: scry?.mana_cost || '',
           cmc: scry?.cmc || 0,
