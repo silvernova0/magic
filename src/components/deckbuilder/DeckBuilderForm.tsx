@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MOXFIELD_BRACKETS, DECK_THEMES, MTG_COLORS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,11 +22,38 @@ interface DeckBuilderFormProps {
 
 const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }) => {
   const [commander, setCommander] = useState('');
+  const [commanderSuggestions, setCommanderSuggestions] = useState<string[]>([]);
   const [theme, setTheme] = useState('Aggro');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [powerLevel, setPowerLevel] = useState('3');
   const [useCollectionOnly, setUseCollectionOnly] = useState(false);
   const [collection, setCollection] = useState('');
+
+  // Auto-complete commander search using Scryfall
+  useEffect(() => {
+    const fetchCommanderSuggestions = async () => {
+      if (commander.length < 2) {
+        setCommanderSuggestions([]);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://api.scryfall.com/cards/search?q=${encodeURIComponent(commander)}+type:legendary+type:creature&unique=cards&order=edhrec`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const suggestions = data.data?.slice(0, 10).map((card: any) => card.name) || [];
+          setCommanderSuggestions(suggestions);
+        }
+      } catch (error) {
+        console.error('Error fetching commander suggestions:', error);
+      }
+    };
+
+    const debounce = setTimeout(fetchCommanderSuggestions, 300);
+    return () => clearTimeout(debounce);
+  }, [commander]);
 
   const toggleColor = (color: string) => {
     setSelectedColors(prev =>
@@ -63,7 +90,7 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Commander */}
-          <div className="space-y-2">
+          <div className="space-y-2 relative">
             <Label htmlFor="commander">Commander (Optional)</Label>
             <Input
               id="commander"
@@ -72,6 +99,26 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
               placeholder="e.g., Atraxa, Praetors' Voice (leave empty for AI suggestion)"
               disabled={isLoading}
             />
+            
+            {/* Commander Suggestions Dropdown */}
+            {commanderSuggestions.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                {commanderSuggestions.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setCommander(suggestion);
+                      setCommanderSuggestions([]);
+                    }}
+                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            )}
+            
             <p className="text-xs text-muted-foreground">
               Leave empty to let AI suggest the best commander for your theme and colors
             </p>

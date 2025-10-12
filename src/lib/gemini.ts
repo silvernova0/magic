@@ -7,7 +7,7 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash',
+  model: 'gemini-1.5-flash-latest',
 });
 
 const generationConfig = {
@@ -184,8 +184,26 @@ Build the deck now and return valid JSON only.`;
       safetySettings,
     });
 
-    const jsonText = result.response.text();
-    const decklist: DeckBuildResponse = JSON.parse(jsonText);
+    const response = result.response;
+    
+    // Check if response was blocked
+    if (!response || !response.text) {
+      console.error('Gemini response blocked or empty:', response);
+      throw new Error('AI response was blocked or empty. Please try different parameters.');
+    }
+
+    const jsonText = response.text();
+    console.log('Raw Gemini response:', jsonText.substring(0, 500)); // Log first 500 chars for debugging
+    
+    // Try to parse JSON, handle potential code blocks
+    let cleanedJson = jsonText.trim();
+    if (cleanedJson.startsWith('```json')) {
+      cleanedJson = cleanedJson.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+    } else if (cleanedJson.startsWith('```')) {
+      cleanedJson = cleanedJson.replace(/```\n?/g, '').replace(/```\n?$/g, '');
+    }
+    
+    const decklist: DeckBuildResponse = JSON.parse(cleanedJson);
 
     // Validation
     const totalCards = 
@@ -198,6 +216,8 @@ Build the deck now and return valid JSON only.`;
       (decklist.planeswalkers?.length || 0) +
       (decklist.lands?.length || 0);
 
+    console.log(`Generated deck has ${totalCards} cards`);
+
     if (totalCards < 95 || totalCards > 105) {
       console.warn(`Generated deck has ${totalCards} cards, expected 100`);
     }
@@ -207,9 +227,23 @@ Build the deck now and return valid JSON only.`;
     }
 
     return decklist;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating deck with Gemini:', error);
-    throw new Error('Failed to generate deck. Please try again with different parameters.');
+    
+    // Provide more specific error messages
+    if (error instanceof SyntaxError) {
+      throw new Error('AI returned invalid data format. Please try again.');
+    }
+    
+    if (error.message?.includes('API key')) {
+      throw new Error('API configuration error. Please contact administrator.');
+    }
+    
+    if (error.message?.includes('quota') || error.message?.includes('rate limit')) {
+      throw new Error('AI service is temporarily unavailable. Please try again in a moment.');
+    }
+    
+    throw new Error(error.message || 'Failed to generate deck. Please try again with different parameters.');
   }
 }
 
