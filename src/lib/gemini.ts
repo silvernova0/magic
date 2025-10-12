@@ -16,6 +16,7 @@ const generationConfig = {
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
+  responseMimeType: 'application/json',
 };
 
 const safetySettings = [
@@ -192,18 +193,37 @@ ADDITIONAL CONTEXT:
 
 Build the deck now and return valid JSON only.`;
 
+  console.log('Prompt length:', prompt.length);
+  console.log('Prompt preview (first 500 chars):', prompt.substring(0, 500));
+  console.log('Generation config:', JSON.stringify(generationConfig));
+
   try {
+    console.log('Calling Gemini API...');
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
       generationConfig,
       safetySettings,
     });
+    console.log('Gemini API call completed');
 
     const response = result.response;
     
+    // Detailed response debugging
+    console.log('Gemini response object:', JSON.stringify({
+      candidates: result.response.candidates?.length,
+      promptFeedback: result.response.promptFeedback,
+      usageMetadata: result.response.usageMetadata,
+    }));
+    
     // Check if response was blocked
+    if (result.response.promptFeedback?.blockReason) {
+      console.error('Prompt was blocked:', result.response.promptFeedback);
+      throw new Error(`AI prompt was blocked: ${result.response.promptFeedback.blockReason}. Try different parameters.`);
+    }
+    
     if (!response || !response.text) {
       console.error('Gemini response blocked or empty:', response);
+      console.error('Full result:', JSON.stringify(result, null, 2));
       throw new Error('AI response was blocked or empty. Please try different parameters.');
     }
 
