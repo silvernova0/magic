@@ -14,7 +14,8 @@ const CATEGORY_ORDER: CardCategory[] = [
 ];
 
 const CategoryDisplay: React.FC<{ title: string; cards: string[] | undefined }> = ({ title, cards }) => {
-  if (!cards || cards.length === 0) return null;
+  // Ensure cards is an array
+  if (!cards || !Array.isArray(cards) || cards.length === 0) return null;
 
   const formattedTitle = title.charAt(0).toUpperCase() + title.slice(1);
 
@@ -35,7 +36,9 @@ const CategoryDisplay: React.FC<{ title: string; cards: string[] | undefined }> 
 };
 
 const DeckDisplay: React.FC<DeckDisplayProps> = ({ decklist, initialDeckName, isSaved }) => {
-  const totalCards = Object.values(decklist).reduce((sum, category) => sum + (category?.length || 0), 0);
+  const totalCards = Object.values(decklist).reduce((sum, category) => {
+    return sum + (Array.isArray(category) ? category.length : 0);
+  }, 0);
 
   return (
     <div className="h-full flex flex-col">

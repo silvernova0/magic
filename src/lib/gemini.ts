@@ -220,7 +220,44 @@ Build the deck now and return valid JSON only.`;
       cleanedJson = cleanedJson.replace(/```\n?/g, '').replace(/```\n?$/g, '');
     }
     
-    const decklist: DeckBuildResponse = JSON.parse(cleanedJson);
+    let decklist: DeckBuildResponse = JSON.parse(cleanedJson);
+
+    // Handle nested structure (some responses have "mainboard" wrapper)
+    if ((decklist as any).mainboard) {
+      console.log('Detected nested mainboard structure, flattening...');
+      const mainboard = (decklist as any).mainboard;
+      decklist = {
+        commander: Array.isArray((decklist as any).commander) 
+          ? (decklist as any).commander 
+          : typeof (decklist as any).commander === 'string'
+          ? [(decklist as any).commander]
+          : [],
+        creatures: mainboard.creatures || [],
+        instants: mainboard.instants || [],
+        sorceries: mainboard.sorceries || [],
+        artifacts: mainboard.artifacts || [],
+        enchantments: mainboard.enchantments || [],
+        planeswalkers: mainboard.planeswalkers || [],
+        lands: mainboard.lands || [],
+        description: (decklist as any).description || '',
+        strategy: (decklist as any).strategy || '',
+        keyCards: (decklist as any).keyCards || [],
+      };
+    }
+
+    // Ensure all card category properties are arrays
+    decklist.commander = Array.isArray(decklist.commander) 
+      ? decklist.commander 
+      : typeof decklist.commander === 'string'
+      ? [decklist.commander]
+      : [];
+    decklist.creatures = Array.isArray(decklist.creatures) ? decklist.creatures : [];
+    decklist.instants = Array.isArray(decklist.instants) ? decklist.instants : [];
+    decklist.sorceries = Array.isArray(decklist.sorceries) ? decklist.sorceries : [];
+    decklist.artifacts = Array.isArray(decklist.artifacts) ? decklist.artifacts : [];
+    decklist.enchantments = Array.isArray(decklist.enchantments) ? decklist.enchantments : [];
+    decklist.planeswalkers = Array.isArray(decklist.planeswalkers) ? decklist.planeswalkers : [];
+    decklist.lands = Array.isArray(decklist.lands) ? decklist.lands : [];
 
     // Validation
     const totalCards = 
@@ -234,6 +271,16 @@ Build the deck now and return valid JSON only.`;
       (decklist.lands?.length || 0);
 
     console.log(`Generated deck has ${totalCards} cards`);
+    console.log('Deck breakdown:', {
+      commander: decklist.commander?.length,
+      creatures: decklist.creatures?.length,
+      instants: decklist.instants?.length,
+      sorceries: decklist.sorceries?.length,
+      artifacts: decklist.artifacts?.length,
+      enchantments: decklist.enchantments?.length,
+      planeswalkers: decklist.planeswalkers?.length,
+      lands: decklist.lands?.length,
+    });
 
     if (totalCards < 95 || totalCards > 105) {
       console.warn(`Generated deck has ${totalCards} cards, expected 100`);
