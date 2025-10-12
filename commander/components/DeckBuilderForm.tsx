@@ -48,7 +48,7 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
           value={theme}
           onChange={(e) => setTheme(e.target.value)}
           className="w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-gray-200 p-3 transition"
-          placeholder="e.g., Dragon Tribal, Vampire Lifegain, Artifacts Matter"
+          placeholder="e.g., Dragon Kindred, Vampire Lifegain, Artifacts Matter"
           required
         />
       </div>

@@ -11,7 +11,7 @@ An intelligent Commander deck builder powered by Google Gemini AI with context f
 - **Moxfield Brackets** - Power level classification (1-5)
 
 ### 🎴 Deck Configuration
-- **20+ Themes** - Aggro, Control, Stax, Combo, Tribal, and more
+- **20+ Themes** - Aggro, Control, Stax, Combo, Kindred, and more
 - **Color Identity** - Build in specific colors or let AI decide
 - **Power Levels** - Bracket 1 (Precon) to Bracket 5 (cEDH)
 - **Collection Mode** - Build from your cards OR use any cards

@@ -23,7 +23,7 @@ Choose from 20+ deck archetypes:
 - **Stax** - Tax effects and resource denial
 - **Combo** - Multi-card instant-win combinations
 - **Midrange** - Value engines and resilient threats
-- **Tribal** - Creature type synergies
+- **Kindred** - Creature type synergies
 - **Voltron** - Commander damage with equipment/auras
 - **Tokens** - Go-wide strategies
 - **Aristocrats** - Sacrifice and death triggers
@@ -45,7 +45,7 @@ Choose from 20+ deck archetypes:
 **Bracket 2 - Casual**
 - Upgraded precons
 - Some ramp and basic tutors
-- Tribal synergies
+- Kindred synergies
 
 **Bracket 3 - Focused**
 - Tuned with good synergies
@@ -106,16 +106,16 @@ Click **"Build My Commander Deck"** and wait for AI to generate your deck!
 
 ## Example Builds
 
-### Example 1: Budget Tribal Deck
+### Example 1: Budget Kindred Deck
 ```
 Commander: (leave empty)
-Theme: Tribal
+Theme: Kindred
 Colors: Green, White
 Power Level: Bracket 2
 Use Collection Only: ✓
 Collection: (paste your cards)
 ```
-**Result**: AI suggests best tribal commander for your G/W cards and builds around them
+**Result**: AI suggests best kindred commander for your G/W cards and builds around them
 
 ### Example 2: Competitive Stax
 ```
@@ -194,7 +194,7 @@ Your generated deck includes:
 - Import your collection from Moxfield/Archidekt
 
 ### 4. **Theme Synergy**
-- Tribal works best in G/W/R colors
+- Kindred works best in G/W/R colors
 - Control excels in U/W/B
 - Aggro prefers R/G/W
 - Combo loves U/B/R

@@ -27,7 +27,7 @@ Reference: https://moxfield.com/commanderbrackets
 - Stax
 - Combo
 - Midrange
-- Tribal
+- Kindred
 - Voltron
 - Tokens
 - Aristocrats
@@ -95,16 +95,16 @@ Reference: https://moxfield.com/commanderbrackets
 
 ### 🎯 Example Builds
 
-#### Example 1: Budget Tribal from Your Collection
+#### Example 1: Budget Kindred from Your Collection
 ```
 Commander: (leave empty)
-Theme: Tribal
+Theme: Kindred
 Colors: Green, White
 Power Level: Bracket 2
 Use Collection Only: ✓
 Collection: (paste your cards)
 ```
-**Result**: AI suggests best G/W tribal commander you own and builds around your cards
+**Result**: AI suggests best G/W kindred commander you own and builds around your cards
 
 #### Example 2: Competitive Stax Deck
 ```
@@ -216,7 +216,7 @@ Response: {
    - More colors = more options but risky mana
 
 3. **Theme Synergy**
-   - Tribal works best in G/W/R colors
+   - Kindred works best in G/W/R colors
    - Control excels in U/W/B
    - Aggro prefers R/G/W
    - Combo loves U/B/R
@@ -252,7 +252,7 @@ See **GEMINI_DECK_BUILDER.md** for comprehensive documentation including:
 **Ready to test!** Try building a deck:
 
 1. Go to http://localhost:3000/deckbuilder
-2. Select theme: "Tribal"
+2. Select theme: "Kindred"
 3. Colors: Green, White
 4. Power Level: Bracket 2
 5. Leave commander empty for AI suggestion
@@ -260,8 +260,8 @@ See **GEMINI_DECK_BUILDER.md** for comprehensive documentation including:
 7. Click "Build My Commander Deck"
 
 The AI will generate a complete 100-card Commander deck with:
-- Suggested commander for G/W Tribal
-- Popular tribal cards from EDHREC
+- Suggested commander for G/W Kindred
+- Popular kindred cards from EDHREC
 - Proper mana base
 - Card draw and ramp
 - Removal and interaction

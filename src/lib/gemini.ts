@@ -85,7 +85,7 @@ Your task is to build a 100-card singleton Commander deck following these princi
 
 POWER LEVEL GUIDELINES (Moxfield Brackets):
 - Bracket 1: Precon-level, basic lands, simple synergies, no fast mana
-- Bracket 2: Upgraded precons, some ramp, basic tutors, tribal synergies
+- Bracket 2: Upgraded precons, some ramp, basic tutors, kindred synergies
 - Bracket 3: Focused strategy, good card quality, tutors, some combos, efficient ramp
 - Bracket 4: Highly optimized, fast mana (Sol Ring, Mana Crypt), powerful tutors, strong combos
 - Bracket 5: cEDH, aims to win turns 1-4, best cards, instant-win combos, minimal interaction
@@ -97,7 +97,7 @@ DECK ARCHETYPES:
 - Stax: Tax effects, resource denial, asymmetric effects, slow the game
 - Combo: Assemble 2-3 card combos for instant wins
 - Midrange: Value engines, resilient threats, good stuff
-- Tribal: Creature type synergies
+- Kindred: Creature type synergies
 - Voltron: Commander damage, auras/equipment
 - Tokens: Create many creatures, go wide strategies
 - Aristocrats: Sacrifice outlets + death triggers
