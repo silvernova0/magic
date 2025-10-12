@@ -79,6 +79,7 @@ model Deck {
 enum DeckStatus {
   GENERATED
   SAVED
+  IMPORTED
 }
 
 model DeckCache {

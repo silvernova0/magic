@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, SchemaType } from '@google/generative-ai';
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable not set');
@@ -16,66 +16,6 @@ const generationConfig = {
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
-  responseMimeType: 'application/json',
-  responseSchema: {
-    type: 'object',
-    properties: {
-      commander: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array with commander name(s)'
-      },
-      creatures: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of creature card names'
-      },
-      instants: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of instant card names'
-      },
-      sorceries: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of sorcery card names'
-      },
-      artifacts: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of artifact card names'
-      },
-      enchantments: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of enchantment card names'
-      },
-      planeswalkers: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of planeswalker card names'
-      },
-      lands: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of land card names'
-      },
-      description: {
-        type: 'string',
-        description: 'Brief deck description'
-      },
-      strategy: {
-        type: 'string',
-        description: 'How to pilot the deck'
-      },
-      keyCards: {
-        type: 'array',
-        items: { type: 'string' },
-        description: 'Array of 3-5 key cards'
-      }
-    },
-    required: ['commander', 'creatures', 'instants', 'sorceries', 'artifacts', 'enchantments', 'planeswalkers', 'lands']
-  }
 };
 
 const safetySettings = [
