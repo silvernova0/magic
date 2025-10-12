@@ -6,9 +6,9 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Using gemini-1.5-flash-002 - the stable v1 API model
+// Using gemini-2.5-flash - latest stable Flash model with 1M token context
 const model = genAI.getGenerativeModel({
-  model: 'gemini-1.5-flash-002',
+  model: 'gemini-2.5-flash',
 });
 
 const generationConfig = {
