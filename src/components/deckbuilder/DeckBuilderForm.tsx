@@ -218,6 +218,9 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
             <p className="text-xs text-muted-foreground">
               Check this to only use cards you own. Uncheck to build from any cards.
             </p>
+            <p className="text-xs text-green-600 dark:text-green-400 font-medium">
+              💡 Basic lands (Forest, Island, Mountain, Plains, Swamp, Wastes) are always available in unlimited quantities
+            </p>
           </div>
 
           {/* Collection Input */}

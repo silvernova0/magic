@@ -109,12 +109,13 @@ DECK BUILDING RULES:
 2. Commander must be legendary creature(s) in chosen colors
 3. All cards must match commander's color identity
 4. Singleton format (max 1 copy except basic lands)
-5. Include 35-40 lands for most decks (adjust for power level)
-6. Include 8-12 ramp sources (Sol Ring, signets, land ramp)
-7. Include 8-10 card draw sources
-8. Include 8-10 removal/interaction pieces
-9. Build around commander's abilities and chosen theme
-10. Reference popular cards from EDHREC for the commander/theme
+5. Basic lands have NO LIMIT - you can use as many Forest, Island, Mountain, Plains, Swamp, and Wastes as needed
+6. Include 35-40 lands for most decks (adjust for power level)
+7. Include 8-12 ramp sources (Sol Ring, signets, land ramp)
+8. Include 8-10 card draw sources
+9. Include 8-10 removal/interaction pieces
+10. Build around commander's abilities and chosen theme
+11. Reference popular cards from EDHREC for the commander/theme
 
 POPULAR STAPLES BY POWER LEVEL:
 Bracket 1-2: Sol Ring, Command Tower, Arcane Signet, Cultivate, Swords to Plowshares
@@ -156,11 +157,21 @@ ${useCollectionOnly ? '- IMPORTANT: Only use cards from the provided collection 
 MY CARD COLLECTION:
 ---
 ${userCollection}
+
+BASIC LANDS (Always Available - No Limit in Commander):
+- Forest (unlimited)
+- Island (unlimited)
+- Mountain (unlimited)
+- Plains (unlimited)
+- Swamp (unlimited)
+- Wastes (unlimited)
 ---
 
 BUILD RULES:
 - You MUST use only cards from the collection above
-- If the collection is insufficient, include a note in the description
+- Basic lands (Forest, Island, Mountain, Plains, Swamp, Wastes) are ALWAYS available regardless of collection
+- You can use as many basic lands as needed for the mana base
+- If the collection is insufficient for non-land cards, include a note in the description
 - Prioritize the best cards available in the collection for this theme
 `;
   } else {
