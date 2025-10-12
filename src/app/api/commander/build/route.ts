@@ -50,7 +50,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ deck: newDeck, decklist });
   } catch (error) {
     console.error("Error generating or parsing decklist:", error);
-    return NextResponse.json({ error: "Failed to generate a valid deck. The model might be busy or the request was invalid. Please try again with a more detailed collection or theme." }, { status: 500 });
+    
+    // Provide specific error messages
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    
+    // Check if it's a card count validation error
+    if (errorMessage.includes('100 cards')) {
+      return NextResponse.json({ 
+        error: errorMessage 
+      }, { status: 400 });
+    }
+    
+    return NextResponse.json({ 
+      error: `Failed to generate a valid deck: ${errorMessage}. Please try again.` 
+    }, { status: 500 });
   }
 }
 
