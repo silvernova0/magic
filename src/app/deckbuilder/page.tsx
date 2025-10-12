@@ -17,7 +17,14 @@ const DeckBuilderPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleBuildDeck = useCallback(async (collection: string, theme: string, powerLevel: string) => {
+  const handleBuildDeck = useCallback(async (params: {
+    commander: string;
+    theme: string;
+    colors: string[];
+    powerLevel: string;
+    useCollectionOnly: boolean;
+    collection: string;
+  }) => {
     setIsLoading(true);
     setError(null);
     setDecklist(null);
@@ -28,7 +35,7 @@ const DeckBuilderPage: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ collection, theme, powerLevel }),
+        body: JSON.stringify(params),
       });
 
       if (!response.ok) {

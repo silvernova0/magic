@@ -1,81 +1,207 @@
+'use client';
 
 import React, { useState } from 'react';
-import { POWER_LEVELS } from '@/lib/constants';
+import { MOXFIELD_BRACKETS, DECK_THEMES, MTG_COLORS } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface DeckBuilderFormProps {
-  onSubmit: (collection: string, theme: string, powerLevel: string) => void;
+  onSubmit: (params: {
+    commander: string;
+    theme: string;
+    colors: string[];
+    powerLevel: string;
+    useCollectionOnly: boolean;
+    collection: string;
+  }) => void;
   isLoading: boolean;
 }
 
 const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }) => {
+  const [commander, setCommander] = useState('');
+  const [theme, setTheme] = useState('Aggro');
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [powerLevel, setPowerLevel] = useState('3');
+  const [useCollectionOnly, setUseCollectionOnly] = useState(false);
   const [collection, setCollection] = useState('');
-  const [theme, setTheme] = useState('');
-  const [powerLevel, setPowerLevel] = useState(POWER_LEVELS[0]);
+
+  const toggleColor = (color: string) => {
+    setSelectedColors(prev =>
+      prev.includes(color)
+        ? prev.filter(c => c !== color)
+        : [...prev, color]
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!collection.trim() || !theme.trim()) {
-        alert("Please provide your card collection and a deck theme.");
-        return;
+    if (useCollectionOnly && !collection.trim()) {
+      alert('Please provide your card collection or uncheck "Use Collection Only"');
+      return;
     }
-    onSubmit(collection, theme, powerLevel);
+    onSubmit({
+      commander,
+      theme,
+      colors: selectedColors,
+      powerLevel,
+      useCollectionOnly,
+      collection,
+    });
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div>
-        <label htmlFor="collection" className="block text-sm font-medium text-purple-300 mb-1">
-          Your Card Collection
-        </label>
-        <textarea
-          id="collection"
-          value={collection}
-          onChange={(e) => setCollection(e.target.value)}
-          rows={12}
-          className="w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-gray-200 p-3 transition"
-          placeholder="Paste your card list here, one card per line. e.g.&#10;Sol Ring&#10;Swords to Plowshares&#10;Rhystic Study"
-          required
-        />
-      </div>
-      
-      <div>
-        <label htmlFor="theme" className="block text-sm font-medium text-purple-300 mb-1">
-          Deck Theme
-        </label>
-        <input
-          type="text"
-          id="theme"
-          value={theme}
-          onChange={(e) => setTheme(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-gray-200 p-3 transition"
-          placeholder="e.g., Dragon Tribal, Vampire Lifegain, Artifacts Matter"
-          required
-        />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Deck Configuration</CardTitle>
+          <CardDescription>
+            Configure your Commander deck with AI assistance using data from EDHREC, MTGTop8, and Moxfield
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Commander */}
+          <div className="space-y-2">
+            <Label htmlFor="commander">Commander (Optional)</Label>
+            <Input
+              id="commander"
+              value={commander}
+              onChange={(e) => setCommander(e.target.value)}
+              placeholder="e.g., Atraxa, Praetors' Voice (leave empty for AI suggestion)"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty to let AI suggest the best commander for your theme and colors
+            </p>
+          </div>
 
-      <div>
-        <label htmlFor="power-level" className="block text-sm font-medium text-purple-300 mb-1">
-          Power Level
-        </label>
-        <select
-          id="power-level"
-          value={powerLevel}
-          onChange={(e) => setPowerLevel(e.target.value)}
-          className="w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-gray-200 p-3 transition"
-        >
-          {POWER_LEVELS.map((level) => (
-            <option key={level} value={level}>{level}</option>
-          ))}
-        </select>
-      </div>
-      
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-lg text-lg font-bold text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 disabled:scale-100"
-      >
-        {isLoading ? 'Brewing...' : 'Build My Deck'}
-      </button>
+          {/* Theme */}
+          <div className="space-y-2">
+            <Label htmlFor="theme">Deck Theme/Archetype</Label>
+            <select
+              id="theme"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+              className="w-full bg-background border border-input rounded-md p-2"
+              disabled={isLoading}
+            >
+              {DECK_THEMES.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              Choose the primary strategy for your deck
+            </p>
+          </div>
+
+          {/* Color Identity */}
+          <div className="space-y-2">
+            <Label>Color Identity</Label>
+            <div className="flex flex-wrap gap-2">
+              {MTG_COLORS.map((color) => (
+                <button
+                  key={color.value}
+                  type="button"
+                  onClick={() => toggleColor(color.value)}
+                  className={`px-4 py-2 rounded-md border-2 transition-all ${
+                    selectedColors.includes(color.value)
+                      ? 'border-primary bg-primary/20'
+                      : 'border-muted hover:border-primary/50'
+                  }`}
+                  disabled={isLoading}
+                >
+                  <span className="mr-1">{color.symbol}</span>
+                  {color.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Select colors to limit deck building (leave empty for any colors)
+            </p>
+          </div>
+
+          {/* Power Level */}
+          <div className="space-y-2">
+            <Label htmlFor="power-level">Power Level (Moxfield Brackets)</Label>
+            <select
+              id="power-level"
+              value={powerLevel}
+              onChange={(e) => setPowerLevel(e.target.value)}
+              className="w-full bg-background border border-input rounded-md p-2"
+              disabled={isLoading}
+            >
+              {MOXFIELD_BRACKETS.map((bracket) => (
+                <option key={bracket.value} value={bracket.value}>
+                  {bracket.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground">
+              {MOXFIELD_BRACKETS.find(b => b.value === powerLevel)?.description}
+            </p>
+            <a
+              href="https://moxfield.com/commanderbrackets"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary hover:underline"
+            >
+              Learn more about Moxfield Commander Brackets →
+            </a>
+          </div>
+
+          {/* Collection Option */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="use-collection"
+                checked={useCollectionOnly}
+                onChange={(e) => setUseCollectionOnly(e.target.checked)}
+                className="rounded border-input"
+                disabled={isLoading}
+              />
+              <Label htmlFor="use-collection" className="cursor-pointer">
+                Build from my collection only
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Check this to only use cards you own. Uncheck to build from any cards.
+            </p>
+          </div>
+
+          {/* Collection Input */}
+          {useCollectionOnly && (
+            <div className="space-y-2">
+              <Label htmlFor="collection">Your Card Collection</Label>
+              <Textarea
+                id="collection"
+                value={collection}
+                onChange={(e) => setCollection(e.target.value)}
+                rows={8}
+                placeholder="Paste your card list here, one card per line:&#10;Sol Ring&#10;Swords to Plowshares&#10;Rhystic Study&#10;..."
+                disabled={isLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                List your available cards (one per line)
+              </p>
+            </div>
+          )}
+
+          {/* Submit */}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full"
+            size="lg"
+          >
+            {isLoading ? 'Building Deck with AI...' : 'Build My Commander Deck'}
+          </Button>
+        </CardContent>
+      </Card>
     </form>
   );
 };
