@@ -16,7 +16,66 @@ const generationConfig = {
   topP: 0.95,
   topK: 64,
   maxOutputTokens: 8192,
-  // Note: Not using responseMimeType - let AI return JSON naturally
+  responseMimeType: 'application/json',
+  responseSchema: {
+    type: 'object',
+    properties: {
+      commander: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array with commander name(s)'
+      },
+      creatures: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of creature card names'
+      },
+      instants: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of instant card names'
+      },
+      sorceries: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of sorcery card names'
+      },
+      artifacts: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of artifact card names'
+      },
+      enchantments: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of enchantment card names'
+      },
+      planeswalkers: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of planeswalker card names'
+      },
+      lands: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of land card names'
+      },
+      description: {
+        type: 'string',
+        description: 'Brief deck description'
+      },
+      strategy: {
+        type: 'string',
+        description: 'How to pilot the deck'
+      },
+      keyCards: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of 3-5 key cards'
+      }
+    },
+    required: ['commander', 'creatures', 'instants', 'sorceries', 'artifacts', 'enchantments', 'planeswalkers', 'lands']
+  }
 };
 
 const safetySettings = [
@@ -105,7 +164,7 @@ DECK ARCHETYPES:
 - Reanimator: Graveyard recursion, cheat big creatures into play
 
 DECK BUILDING RULES:
-1. Exactly 100 cards total (including commander)
+1. CRITICAL: Exactly 100 cards total (including commander) - NOT 99, NOT 101, EXACTLY 100
 2. Commander must be legendary creature(s) in chosen colors
 3. All cards must match commander's color identity
 4. Singleton format (max 1 copy except basic lands)
@@ -116,6 +175,7 @@ DECK BUILDING RULES:
 9. Include 8-10 removal/interaction pieces
 10. Build around commander's abilities and chosen theme
 11. Reference popular cards from EDHREC for the commander/theme
+12. VERIFY: Count all cards before returning - commander + creatures + instants + sorceries + artifacts + enchantments + planeswalkers + lands = 100
 
 POPULAR STAPLES BY POWER LEVEL:
 Bracket 1-2: Sol Ring, Command Tower, Arcane Signet, Cultivate, Swords to Plowshares
@@ -282,8 +342,11 @@ Build the deck now and return valid JSON only.`;
       lands: decklist.lands?.length,
     });
 
-    if (totalCards < 95 || totalCards > 105) {
-      console.warn(`Generated deck has ${totalCards} cards, expected 100`);
+    if (totalCards !== 100) {
+      throw new Error(
+        `Generated deck has ${totalCards} cards but Commander format requires exactly 100 cards. ` +
+        `Please try generating again - the AI needs to adjust the deck composition.`
+      );
     }
 
     if (!decklist.commander || decklist.commander.length === 0) {
