@@ -44,13 +44,16 @@ export default function RootLayout({
                     <Link href="/collection" className="block px-3 py-2 rounded hover:bg-white/5">Collection</Link>
                   </li>
                   <li>
+                    <Link href="/deckbuilder" className="block px-3 py-2 rounded hover:bg-white/5">Deck Builder</Link>
+                  </li>
+                  <li>
+                    <Link href="/decks" className="block px-3 py-2 rounded hover:bg-white/5">My Decks</Link>
+                  </li>
+                  <li>
                     <Link href="/import" className="block px-3 py-2 rounded hover:bg-white/5">Import / Export</Link>
                   </li>
                   <li>
                     <Link href="/commander" className="block px-3 py-2 rounded hover:bg-white/5">Commander Search</Link>
-                  </li>
-                  <li>
-                    <Link href="/deckbuilder" className="block px-3 py-2 rounded hover:bg-white/5">Deck Builder</Link>
                   </li>
                 </ul>
               </nav>
