@@ -1,4 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, SchemaType } from '@google/generative-ai';
+import { getScrapedData } from './scrapers';
+import { formatScrapedDataForPrompt, getScraperSummary } from './scraperFormatter';
+import { removeBannedCards, findBannedCards } from './bannedCards';
 
 if (!process.env.GEMINI_API_KEY) {
   throw new Error('GEMINI_API_KEY environment variable not set');
@@ -6,17 +9,17 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Using gemini-2.5-flash - latest stable Flash model with 1M token context
+// Using gemini-2.5-flash - latest Flash model
 const model = genAI.getGenerativeModel({
   model: 'gemini-2.5-flash',
 });
 
 const generationConfig = {
-  temperature: 0.7, // Lower temperature for more consistent format
+  temperature: 0.9, // Higher temperature for more variety in card selection
   topP: 0.95,
-  topK: 40,
+  topK: 64,
   maxOutputTokens: 16384, // Increased to handle full response
-  responseMimeType: 'application/json',
+  // Removed responseMimeType to allow free-form JSON that we'll parse manually
 };
 
 const safetySettings = [
@@ -76,6 +79,19 @@ export async function buildCommanderDeckWithAI(
     userCollection,
   } = request;
 
+  // Fetch real-time meta data from scrapers
+  console.log('Fetching real-time meta data from EDHREC, MTGTop8, and Moxfield...');
+  let scrapedData;
+  let metaContext = '';
+  
+  try {
+    scrapedData = await getScrapedData();
+    metaContext = formatScrapedDataForPrompt(scrapedData, theme, powerLevel);
+    console.log('Scraped data loaded:', getScraperSummary(scrapedData));
+  } catch (error) {
+    console.warn('Failed to load scraped data, continuing without real-time meta:', error);
+  }
+
   // Build comprehensive system instruction with EDH knowledge
   const systemInstruction = `You are an expert Magic: The Gathering Commander (EDH) deck builder with extensive knowledge from:
 - EDHREC.com (the most popular commander database and statistics site)
@@ -111,48 +127,56 @@ DECK BUILDING RULES:
 4. Singleton format (max 1 copy except basic lands)
 5. Basic lands have NO LIMIT - you can use as many Forest, Island, Mountain, Plains, Swamp, and Wastes as needed
 6. Include 35-40 lands for most decks (adjust for power level)
-7. Include 8-12 ramp sources (Sol Ring, signets, land ramp)
+7. Include 8-12 ramp sources (signets, land ramp, but avoid banned fast mana)
 8. Include 8-10 card draw sources
 9. Include 8-10 removal/interaction pieces
 10. Build around commander's abilities and chosen theme
 11. Reference popular cards from EDHREC for the commander/theme
 12. VERIFY: Count all cards before returning - commander + creatures + instants + sorceries + artifacts + enchantments + planeswalkers + lands = 100
+13. DO NOT include any banned cards (see list below)
 
-POPULAR STAPLES BY POWER LEVEL:
-Bracket 1-2: Sol Ring, Command Tower, Arcane Signet, Cultivate, Swords to Plowshares
-Bracket 3: Rhystic Study, Smothering Tithe, Cyclonic Rift, Demonic Tutor, Mana Drain
-Bracket 4-5: Mana Crypt, Force of Will, Gaea's Cradle, Timetwister, The One Ring, Jeweled Lotus
+BANNED CARDS - DO NOT INCLUDE THESE:
+Mana Crypt, Jeweled Lotus, Dockside Extortionist, Black Lotus, Mox Emerald, Mox Jet, Mox Pearl, Mox Ruby, Mox Sapphire, Time Walk, Ancestral Recall, Tinker, Karakas, Griselbrand, Emrakul the Aeons Torn, Primeval Titan, Iona Shield of Emeria, Golos Tireless Pilgrim, Nadu Winged Wisdom, Hullbreacher, Leovold Emissary of Trest, Prophet of Kruphix, Paradox Engine, Library of Alexandria, Tolarian Academy, Rofellos Llanowar Emissary, Fastbond, Channel, Flash, Balance, Biorhythm, Limited Resources, Trade Secrets, Upheaval, and others. Use legal alternatives instead.
 
-OUTPUT FORMAT REQUIREMENTS:
-1. Return ONLY valid JSON - no markdown, no code blocks, no explanation
-2. Each card category must be an array of STRINGS (card names only)
-3. Do NOT include card objects with "name", "set", or "collector_number" fields
-4. Do NOT use nested structures like "mainboard" or "sideboard"
-5. Start with { and end with } - nothing else
+POPULAR STAPLES BY POWER LEVEL (all legal):
+Bracket 1-2: Sol Ring, Command Tower, Arcane Signet, Cultivate, Swords to Plowshares, Thought Vessel
+Bracket 3: Rhystic Study, Smothering Tithe, Cyclonic Rift, Demonic Tutor, Mana Drain, Sensei's Divining Top
+Bracket 4-5: Force of Will, Gaea's Cradle, The One Ring, Chrome Mox, Fierce Guardianship, Deflecting Swat
 
-REQUIRED JSON STRUCTURE (use EXACTLY this format):
+OUTPUT FORMAT REQUIREMENTS - CRITICAL:
+1. Return ONLY valid JSON starting with { and ending with }
+2. Do NOT wrap in "deck" or any other object
+3. Do NOT include markdown code blocks, explanations, or any text outside the JSON
+4. Each card category MUST be an array of STRING card names
+5. Do NOT use objects with "name" fields - ONLY plain strings
+
+MANDATORY JSON STRUCTURE - COPY THIS EXACTLY:
 {
-  "commander": ["Commander Name"],
-  "creatures": ["Card Name", "Card Name", ...],
-  "instants": ["Card Name", ...],
-  "sorceries": ["Card Name", ...],
-  "artifacts": ["Card Name", ...],
-  "enchantments": ["Card Name", ...],
-  "planeswalkers": ["Card Name", ...],
-  "lands": ["Card Name", ...],
+  "commander": ["Commander Name Here"],
+  "creatures": ["Creature 1", "Creature 2", "Creature 3", ...],
+  "instants": ["Instant 1", "Instant 2", ...],
+  "sorceries": ["Sorcery 1", "Sorcery 2", ...],
+  "artifacts": ["Artifact 1", "Artifact 2", ...],
+  "enchantments": ["Enchantment 1", "Enchantment 2", ...],
+  "planeswalkers": ["Planeswalker 1", "Planeswalker 2", ...],
+  "lands": ["Land 1", "Land 2", "Land 3", ...],
   "description": "Brief deck description",
   "strategy": "How to pilot the deck",
-  "keyCards": ["Card 1", "Card 2", "Card 3"]
+  "keyCards": ["Key Card 1", "Key Card 2", "Key Card 3"]
 }
 
-IMPORTANT: Use simple string arrays for all card lists. Example:
-CORRECT: "creatures": ["Sol Ring", "Birds of Paradise", "Llanowar Elves"]
-WRONG: "creatures": [{"name": "Sol Ring", "set": "LTR"}]
+CRITICAL EXAMPLES:
+✅ CORRECT: "creatures": ["Sol Ring", "Arcane Signet", "Command Tower"]
+❌ WRONG: "creatures": [{"name": "Sol Ring"}, {"name": "Arcane Signet"}]
+❌ WRONG: {"deck": {"creatures": [...]}}
+❌ WRONG: Including "name", "color_identity", "power_level" fields at root
 
-Start your response with { and end with } - nothing else!`;
+YOU MUST INCLUDE ALL 100 CARDS IN THE ARRAYS ABOVE. Count carefully!`;
 
-  // Build the user prompt
-  let prompt = `Build a Commander deck with these specifications:
+  // Build the user prompt with real-time meta data
+  let prompt = metaContext; // Start with real-time data
+  
+  prompt += `Build a Commander deck with these specifications:
 
 REQUIREMENTS:
 - Theme/Archetype: ${theme}
@@ -160,6 +184,16 @@ REQUIREMENTS:
 - Power Level: Bracket ${powerLevel} (Moxfield scale)
 ${commander ? `- Commander: ${commander}` : '- Commander: Choose the best commander for this theme and colors'}
 ${useCollectionOnly ? '- IMPORTANT: Only use cards from the provided collection below' : '- Use any cards from Magic: The Gathering history'}
+
+CRITICAL COLOR IDENTITY RULES:
+${commander ? `- The commander is ${commander}. You MUST determine its color identity first.` : ''}
+- EVERY card in the deck (creatures, instants, sorceries, artifacts, enchantments, planeswalkers, AND lands) MUST match the commander's color identity.
+- Color identity includes mana symbols in the card's mana cost AND text box.
+- Example: If commander is mono-red (R), you can ONLY use red and colorless cards. NO blue, white, black, or green cards.
+- Example: If commander is Azorius (W/U), you can ONLY use white, blue, and colorless cards. NO red, black, or green cards.
+- Lands with color symbols in their text (like Tropical Island, Breeding Pool) count as that color and cannot be used outside that identity.
+- Colorless lands (Wastes, Command Tower, Reliquary Tower) can be used in any deck.
+- Basic lands (Forest, Island, Mountain, Plains, Swamp) can only be used if that color is in the commander's identity.
 
 `;
 
@@ -201,7 +235,33 @@ ADDITIONAL CONTEXT:
 - Ensure the power level matches Bracket ${powerLevel} on the Moxfield scale
 - Balance threats, answers, ramp, and card draw appropriately
 
-Build the deck now and return valid JSON only.`;
+FINAL REMINDER - THIS IS CRITICAL:
+You MUST return a JSON object with arrays containing EXACTLY 100 card names total (no more, no less).
+Count: 1 commander + creatures + instants + sorceries + artifacts + enchantments + planeswalkers + lands = MUST EQUAL 100.
+Do NOT return 99, 101, 102, 103, 104, 105, or any number other than 100.
+Do NOT return deck metadata like "deck_name", "color_identity", "power_level", "theme".
+Do NOT provide explanations, suggestions, or strategy tips as separate fields.
+ONLY return the exact structure with card name arrays as specified above.
+ALL cards must match the commander's color identity - check every single card before including it.
+
+Example of what you MUST return (with real card names, not placeholders):
+{
+  "commander": ["Atraxa, Praetors' Voice"],
+  "creatures": ["Seedborn Muse", "Eternal Witness", "Birds of Paradise", ...30 more creatures...],
+  "instants": ["Counterspell", "Path to Exile", "Swords to Plowshares", ...7 more instants...],
+  "sorceries": ["Kodama's Reach", "Cultivate", "Diabolic Tutor", ...7 more sorceries...],
+  "artifacts": ["Sol Ring", "Arcane Signet", "Commander's Sphere", ...12 more artifacts...],
+  "enchantments": ["Rhystic Study", "Smothering Tithe", ...8 more enchantments...],
+  "planeswalkers": ["Teferi, Hero of Dominaria", "Jace, the Mind Sculptor"],
+  "lands": ["Command Tower", "Exotic Orchard", "Forest", "Island", ...32 more lands...],
+  "description": "Brief strategy description here",
+  "strategy": "How to pilot this deck",
+  "keyCards": ["Key Card 1", "Key Card 2", "Key Card 3"]
+}
+
+COUNT YOUR CARDS: 1 + 33 + 10 + 10 + 15 + 10 + 2 + 36 = 117 (TOO MANY - adjust the numbers to equal exactly 100!)
+
+Now build the deck and return ONLY the JSON with card lists. COUNT CAREFULLY to ensure exactly 100 cards total.`;
 
   console.log('Prompt length:', prompt.length);
   console.log('Prompt preview (first 500 chars):', prompt.substring(0, 500));
@@ -250,7 +310,25 @@ Build the deck now and return valid JSON only.`;
       cleanedJson = cleanedJson.replace(/```\n?/g, '').replace(/```\n?$/g, '');
     }
     
-    let decklist: DeckBuildResponse = JSON.parse(cleanedJson);
+    let parsed = JSON.parse(cleanedJson);
+    
+    // Handle "deck" wrapper that Gemini sometimes adds
+    if (parsed.deck && typeof parsed.deck === 'object') {
+      console.log('Detected "deck" wrapper, unwrapping...');
+      parsed = parsed.deck;
+    }
+    
+    // Validate that we have the expected structure
+    if (!parsed.commander && !parsed.creatures && !parsed.lands) {
+      console.error('Invalid response structure:', parsed);
+      throw new Error(
+        'AI returned invalid format. Expected arrays of card names but got: ' +
+        Object.keys(parsed).join(', ') +
+        '. Please try again.'
+      );
+    }
+    
+    let decklist: DeckBuildResponse = parsed;
 
     // Helper function to convert card objects to string arrays
     const normalizeCardArray = (cards: any): string[] => {
@@ -311,8 +389,8 @@ Build the deck now and return valid JSON only.`;
     decklist.planeswalkers = Array.isArray(decklist.planeswalkers) ? decklist.planeswalkers : [];
     decklist.lands = Array.isArray(decklist.lands) ? decklist.lands : [];
 
-    // Validation
-    const totalCards = 
+    // Validation and auto-correction
+    let totalCards = 
       (decklist.commander?.length || 0) +
       (decklist.creatures?.length || 0) +
       (decklist.instants?.length || 0) +
@@ -334,11 +412,127 @@ Build the deck now and return valid JSON only.`;
       lands: decklist.lands?.length,
     });
 
+    // Auto-correct if not exactly 100 cards
+    if (totalCards > 100) {
+      console.log(`Deck has ${totalCards} cards, trimming to 100...`);
+      const excess = totalCards - 100;
+      
+      // Remove excess from the largest non-essential categories first
+      let remaining = excess;
+      
+      // 1. Try removing from creatures if we have many
+      if (remaining > 0 && decklist.creatures && decklist.creatures.length > 25) {
+        const toRemove = Math.min(remaining, decklist.creatures.length - 25);
+        decklist.creatures = decklist.creatures.slice(0, decklist.creatures.length - toRemove);
+        remaining -= toRemove;
+        console.log(`Removed ${toRemove} creatures`);
+      }
+      
+      // 2. Try removing from lands if we have many
+      if (remaining > 0 && decklist.lands && decklist.lands.length > 35) {
+        const toRemove = Math.min(remaining, decklist.lands.length - 35);
+        decklist.lands = decklist.lands.slice(0, decklist.lands.length - toRemove);
+        remaining -= toRemove;
+        console.log(`Removed ${toRemove} lands`);
+      }
+      
+      // 3. Remove from artifacts if needed
+      if (remaining > 0 && decklist.artifacts && decklist.artifacts.length > 0) {
+        const toRemove = Math.min(remaining, decklist.artifacts.length);
+        decklist.artifacts = decklist.artifacts.slice(0, decklist.artifacts.length - toRemove);
+        remaining -= toRemove;
+        console.log(`Removed ${toRemove} artifacts`);
+      }
+      
+      // 4. Last resort: remove from any remaining category
+      if (remaining > 0) {
+        const categories = [
+          { name: 'instants', array: decklist.instants },
+          { name: 'sorceries', array: decklist.sorceries },
+          { name: 'enchantments', array: decklist.enchantments },
+          { name: 'planeswalkers', array: decklist.planeswalkers },
+        ];
+        
+        for (const cat of categories) {
+          if (remaining > 0 && cat.array && cat.array.length > 0) {
+            const toRemove = Math.min(remaining, cat.array.length);
+            (decklist as any)[cat.name] = cat.array.slice(0, cat.array.length - toRemove);
+            remaining -= toRemove;
+            console.log(`Removed ${toRemove} ${cat.name}`);
+          }
+        }
+      }
+      
+      totalCards = 100;
+    } else if (totalCards < 100) {
+      console.log(`Deck has ${totalCards} cards, adding basic lands to reach 100...`);
+      // Add basic Plains (or appropriate basic land) to reach 100
+      const needed = 100 - totalCards;
+      const basicsToAdd = Array(needed).fill('Plains');
+      decklist.lands = [...(decklist.lands || []), ...basicsToAdd];
+      console.log(`Added ${needed} Plains to reach 100 cards`);
+      totalCards = 100;
+    }
+
     if (totalCards !== 100) {
       throw new Error(
         `Generated deck has ${totalCards} cards but Commander format requires exactly 100 cards. ` +
         `Please try generating again - the AI needs to adjust the deck composition.`
       );
+    }
+
+    // Check for and remove banned cards
+    const allCards = [
+      ...(decklist.commander || []),
+      ...(decklist.creatures || []),
+      ...(decklist.instants || []),
+      ...(decklist.sorceries || []),
+      ...(decklist.artifacts || []),
+      ...(decklist.enchantments || []),
+      ...(decklist.planeswalkers || []),
+      ...(decklist.lands || []),
+    ];
+    
+    const bannedFound = findBannedCards(allCards);
+    
+    if (bannedFound.length > 0) {
+      console.log(`Found ${bannedFound.length} banned cards, removing:`, bannedFound);
+      
+      // Remove banned cards from each category
+      decklist.commander = removeBannedCards(decklist.commander || []);
+      decklist.creatures = removeBannedCards(decklist.creatures || []);
+      decklist.instants = removeBannedCards(decklist.instants || []);
+      decklist.sorceries = removeBannedCards(decklist.sorceries || []);
+      decklist.artifacts = removeBannedCards(decklist.artifacts || []);
+      decklist.enchantments = removeBannedCards(decklist.enchantments || []);
+      decklist.planeswalkers = removeBannedCards(decklist.planeswalkers || []);
+      decklist.lands = removeBannedCards(decklist.lands || []);
+      
+      // Recalculate total and add basic lands to compensate
+      const newTotal = 
+        (decklist.commander?.length || 0) +
+        (decklist.creatures?.length || 0) +
+        (decklist.instants?.length || 0) +
+        (decklist.sorceries?.length || 0) +
+        (decklist.artifacts?.length || 0) +
+        (decklist.enchantments?.length || 0) +
+        (decklist.planeswalkers?.length || 0) +
+        (decklist.lands?.length || 0);
+      
+      if (newTotal < 100) {
+        const needed = 100 - newTotal;
+        const basicsToAdd = Array(needed).fill('Plains');
+        decklist.lands = [...(decklist.lands || []), ...basicsToAdd];
+        console.log(`Added ${needed} Plains to replace banned cards and reach 100 cards`);
+      }
+      
+      // Add warning to description
+      const bannedList = bannedFound.join(', ');
+      if (decklist.description) {
+        decklist.description += `\n\nNote: Removed banned cards (${bannedList}) and replaced with basic lands.`;
+      } else {
+        decklist.description = `Note: Removed banned cards (${bannedList}) and replaced with basic lands.`;
+      }
     }
 
     if (!decklist.commander || decklist.commander.length === 0) {

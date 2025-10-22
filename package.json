@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "create-admin": "node scripts/create-admin.js",
-    "import:firebase": "node scripts/importFirebase.js"
+    "import:firebase": "node scripts/importFirebase.js",
+    "import:scryfall": "npx tsx scripts/import-scryfall.ts",
+    "import:mtgjson": "npx tsx scripts/import-mtgjson.ts",
+    "import:mtgjson:full": "npx tsx scripts/import-mtgjson-comprehensive.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

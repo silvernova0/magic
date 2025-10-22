@@ -30,6 +30,15 @@ An intelligent Commander deck builder powered by Google Gemini AI with context f
 - Email configuration and testing
 - User statistics
 
+### 🎴 Local Card Database (31,000+ cards)
+- **Comprehensive MTGJson Data** - Complete card database with EDHREC rankings
+- **Advanced Filtering** - Search by name, colors, types, keywords, CMC, saltiness
+- **Card Tags** - Auto-generated tags: game-changer, removal, tutor, card-draw, high-salt, etc.
+- **EDHREC Integration** - Popularity rankings and saltiness scores
+- **Power Level Scoring** - Automatic 0-10 power level calculation
+- **Commander Validation** - Identifies legal commanders and format legalities
+- **Price Data** - Purchase URLs for CardKingdom, TCGPlayer, Cardmarket
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -72,6 +81,9 @@ ADMIN_EMAIL=admin@example.com
 ```bash
 npx prisma generate
 npx prisma db push
+
+# Import Scryfall card database (25,000+ cards)
+npm run import:scryfall
 ```
 
 5. **Create admin user**
@@ -128,11 +140,12 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 - **Frontend:** Next.js 15, React 19, TailwindCSS, Shadcn/UI
 - **Backend:** Next.js API Routes, Server Actions
-- **Database:** Prisma ORM + SQLite
-- **AI:** Google Gemini 1.5 Flash
+- **Database:** Prisma ORM + SQLite (local card database with 25,000+ cards)
+- **AI:** Google Gemini 2.5 Flash (hybrid system with local scrapers)
 - **Auth:** NextAuth.js with bcrypt
 - **Email:** Nodemailer
-- **External APIs:** Scryfall, EDHREC
+- **External APIs:** Scryfall, EDHREC, MTGTop8, Moxfield
+- **Scraping:** Cheerio, file-based cache (6-hour TTL)
 
 ## 📖 API Endpoints
 
@@ -147,6 +160,11 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 - `POST /api/decks` - Create deck
 - `PATCH /api/decks/[id]` - Update deck
 - `DELETE /api/decks/[id]` - Delete deck
+
+### Card Database (31,000+ cards)
+- `GET /api/cards/search` - Search and filter cards
+  - Query params: `q` (name/text search), `colors`, `colorIdentity`, `types`, `keywords`, `minCmc`, `maxCmc`, `isCommander`, `minEdhrecRank`, `maxEdhrecRank`, `minSaltiness`, `maxSaltiness`, `rarity`, `sortBy`, `sortOrder`, `limit`, `offset`
+- `GET /api/cards/[nameOrId]` - Get specific card with tags, saltiness, power level
 
 ### Admin
 - `GET /api/admin/test-email` - Test email config
@@ -175,6 +193,9 @@ npx prisma migrate dev
 
 # Reset database
 npx prisma migrate reset
+
+# Import Scryfall card database
+npm run import:scryfall
 ```
 
 ## 📦 Project Structure
