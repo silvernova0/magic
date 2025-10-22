@@ -77,23 +77,42 @@ EMAIL_FROM="Magic Deck Builder <your-email@gmail.com>"
 ADMIN_EMAIL=admin@example.com
 ```
 
-4. **Set up database**
+4. **Download MTGJson card data**
+
+Visit [https://mtgjson.com/downloads/all-files/](https://mtgjson.com/downloads/all-files/) and download:
+- `AtomicCards.json` (Required - ~50MB, unique cards only)
+- `AllPrintings.json` (Optional - ~500MB, all printings)
+
+Place the downloaded files in `data/mtgjson/` directory:
+```bash
+mkdir -p data/mtgjson
+# Move downloaded JSON files to data/mtgjson/
+```
+
+5. **Set up database**
 ```bash
 npx prisma generate
 npx prisma db push
 
-# Import Scryfall card database (25,000+ cards)
-npm run import:scryfall
+# Import MTGJson card database (31,000+ cards with EDHREC data)
+npm run import:mtgjson:full
+
+# This will:
+# - Import 31,483 unique cards from AtomicCards.json
+# - Add EDHREC rankings and saltiness scores
+# - Generate 20+ tag types (game-changer, removal, tutor, etc.)
+# - Calculate power levels (0-10 scale)
+# - Takes ~2-3 minutes
 ```
 
-5. **Create admin user**
+6. **Create admin user**
 ```bash
 npm run create-admin
 # Or with custom credentials:
 npm run create-admin your@email.com password123 "Your Name"
 ```
 
-6. **Run development server**
+7. **Run development server**
 ```bash
 npm run dev
 ```

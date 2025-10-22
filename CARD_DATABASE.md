@@ -1,5 +1,40 @@
 # Card Database Features
 
+## 📥 Setup Instructions
+
+### 1. Download MTGJson Data
+Visit [https://mtgjson.com/downloads/all-files/](https://mtgjson.com/downloads/all-files/) and download:
+
+- **AtomicCards.json** (Required - ~50MB)
+  - Contains unique cards with comprehensive data
+  - This is what we import for the database
+  
+- **AllPrintings.json** (Optional - ~500MB)
+  - Contains all printings and variations
+  - Not currently used but available for future features
+
+### 2. Place Files in Project
+```bash
+mkdir -p data/mtgjson
+# Move downloaded AtomicCards.json to data/mtgjson/
+```
+
+### 3. Import Cards
+```bash
+# Run the comprehensive importer
+npm run import:mtgjson:full
+
+# This will:
+# - Import 31,483 unique cards
+# - Add EDHREC rankings and saltiness scores
+# - Generate 20+ tag types
+# - Calculate power levels (0-10)
+# - Skip 1,252 "funny" cards (silver-bordered, etc.)
+# - Takes approximately 2-3 minutes
+```
+
+**Note**: The JSON files are not tracked in Git due to their size. Each developer needs to download them locally.
+
 ## 🎴 Database Statistics
 - **Total Cards**: 31,483 unique cards
 - **Legal Commanders**: 23
