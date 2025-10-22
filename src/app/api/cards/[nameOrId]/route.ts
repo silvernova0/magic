@@ -13,15 +13,24 @@ export async function GET(
   try {
     const nameOrId = decodeURIComponent(params.nameOrId);
     
-    // Try to find by ID first, then by name
-    const card = await prisma.card.findFirst({
-      where: {
-        OR: [
-          { id: nameOrId },
-          { name: { equals: nameOrId, mode: 'insensitive' } },
-        ],
-      },
+    // Try to find by ID first, then by name (case-insensitive)
+    let card = null;
+    
+    // Try to find by Scryfall ID
+    card = await prisma.card.findUnique({
+      where: { id: nameOrId },
     });
+    
+    // If not found by ID, search by name (case-insensitive)
+    if (!card) {
+      card = await prisma.card.findFirst({
+        where: {
+          name: {
+            equals: nameOrId,
+          },
+        },
+      });
+    }
 
     if (!card) {
       return NextResponse.json(

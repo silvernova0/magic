@@ -29,7 +29,7 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
   const [useCollectionOnly, setUseCollectionOnly] = useState(false);
   const [collection, setCollection] = useState('');
 
-  // Auto-complete commander search using Scryfall
+  // Auto-complete commander search using local database
   useEffect(() => {
     const fetchCommanderSuggestions = async () => {
       if (commander.length < 2) {
@@ -38,12 +38,18 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
       }
 
       try {
-        const response = await fetch(
-          `https://api.scryfall.com/cards/search?q=${encodeURIComponent(commander)}+type:legendary+type:creature&unique=cards&order=edhrec`
-        );
+        // Use local card database with commander tag and EDHREC ranking
+        const params = new URLSearchParams({
+          name: commander,
+          tags: 'commander',
+          sort: 'edhrecRank',
+          limit: '10',
+        });
+        
+        const response = await fetch(`/api/cards/search?${params}`);
         if (response.ok) {
           const data = await response.json();
-          const suggestions = data.data?.slice(0, 10).map((card: any) => card.name) || [];
+          const suggestions = data.cards?.map((card: any) => card.name) || [];
           setCommanderSuggestions(suggestions);
         }
       } catch (error) {

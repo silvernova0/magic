@@ -6,9 +6,11 @@ import DeckBuilderForm from '../../components/deckbuilder/DeckBuilderForm';
 import DeckDisplay from '../../components/deckbuilder/DeckDisplay';
 import LoadingSpinner from '../../components/deckbuilder/LoadingSpinner';
 import SaveDeckForm from '../../components/deckbuilder/SaveDeckForm';
+import CardBrowser from '../../components/deckbuilder/CardBrowser';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const DeckBuilderPage: React.FC = () => {
   const [deck, setDeck] = useState<Deck | null>(null);
@@ -68,39 +70,55 @@ const DeckBuilderPage: React.FC = () => {
           <Link href="/decks">My Decks</Link>
         </Button>
       </header>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-card rounded-lg shadow-lg p-6 border">
-          <DeckBuilderForm onSubmit={handleBuildDeck} isLoading={isLoading} />
-        </div>
-        <div className="bg-card rounded-lg shadow-lg p-6 border min-h-[500px] flex flex-col">
-          {isLoading && (
-            <div className="m-auto text-center">
-              <LoadingSpinner />
-              <p className="mt-4 text-lg text-purple-600 animate-pulse">Brewing your masterpiece...</p>
+      
+      <Tabs defaultValue="builder" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="builder">Deck Builder</TabsTrigger>
+          <TabsTrigger value="browser">Card Browser</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="builder">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+            <div className="bg-card rounded-lg shadow-lg p-6 border">
+              <DeckBuilderForm onSubmit={handleBuildDeck} isLoading={isLoading} />
             </div>
-          )}
-          {error && (
-             <div className="m-auto text-center text-red-500 bg-red-50 dark:bg-red-950 p-6 rounded-lg border border-red-200 dark:border-red-800">
-              <h3 className="text-xl font-bold mb-2">Error</h3>
-              <p>{error}</p>
-            </div>
-          )}
-          {deck && decklist && !isLoading && (
-            <>
-              <DeckDisplay decklist={decklist} initialDeckName={deck.name} isSaved={deck.status === 'SAVED'} />
-              {deck.status === 'GENERATED' && (
-                <SaveDeckForm deckId={deck.id} onDeckSaved={handleDeckSaved} />
+            <div className="bg-card rounded-lg shadow-lg p-6 border min-h-[500px] flex flex-col">
+              {isLoading && (
+                <div className="m-auto text-center">
+                  <LoadingSpinner />
+                  <p className="mt-4 text-lg text-purple-600 animate-pulse">Brewing your masterpiece...</p>
+                </div>
               )}
-            </>
-          )}
-          {!decklist && !isLoading && !error && (
-            <div className="m-auto text-center text-muted-foreground">
-              <p className="text-xl">Your generated deck will appear here.</p>
-              <p className="mt-2 text-sm">Fill out the form and let the magic begin!</p>
+              {error && (
+                <div className="m-auto text-center text-red-500 bg-red-50 dark:bg-red-950 p-6 rounded-lg border border-red-200 dark:border-red-800">
+                  <h3 className="text-xl font-bold mb-2">Error</h3>
+                  <p>{error}</p>
+                </div>
+              )}
+              {deck && decklist && !isLoading && (
+                <>
+                  <DeckDisplay decklist={decklist} initialDeckName={deck.name} isSaved={deck.status === 'SAVED'} />
+                  {deck.status === 'GENERATED' && (
+                    <SaveDeckForm deckId={deck.id} onDeckSaved={handleDeckSaved} />
+                  )}
+                </>
+              )}
+              {!decklist && !isLoading && !error && (
+                <div className="m-auto text-center text-muted-foreground">
+                  <p className="text-xl">Your generated deck will appear here.</p>
+                  <p className="mt-2 text-sm">Fill out the form and let the magic begin!</p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="browser">
+          <div className="mt-6">
+            <CardBrowser />
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
