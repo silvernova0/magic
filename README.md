@@ -1,6 +1,8 @@
-# Magic: The Gathering Commander Deck Builder
+# 🎴 JankBuild - MTG Commander Deck Builder
 
-An intelligent Commander deck builder powered by Google Gemini AI with context from EDHREC, MTGTop8, and Moxfield.
+**Website**: [jankbuild.com](https://jankbuild.com)
+
+An AI-powered Commander/EDH deck builder with comprehensive card collection management, powered by Google Gemini AI with context from EDHREC, MTGTop8, and Moxfield.
 
 ## 🎯 Features
 

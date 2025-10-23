@@ -99,10 +99,10 @@ export default async function Home() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
-              Your Deck Library
+              🎴 JankBuild
             </h1>
             <p className="text-lg text-muted-foreground">
-              Manage and organize your Commander decks
+              AI-Powered Commander Deck Builder & Collection Manager
             </p>
           </div>
           <Button asChild size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">

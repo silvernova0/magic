@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Magic Collection Builder",
-  description: "Build decks from your collection",
+  title: "JankBuild - MTG Commander Deck Builder",
+  description: "AI-powered Commander/EDH deck builder with card collection management",
 };
 
 export default function RootLayout({
@@ -32,8 +32,8 @@ export default function RootLayout({
           <div className="min-h-screen flex">
             <aside className="w-64 bg-muted p-4 border-r hidden md:block">
               <div className="mb-6">
-                <h2 className="text-xl font-semibold">Magic Builder</h2>
-                <p className="text-sm text-muted-foreground">Decks from your collection</p>
+                <h2 className="text-xl font-semibold">🎴 JankBuild</h2>
+                <p className="text-sm text-muted-foreground">AI-Powered Commander Deck Builder</p>
               </div>
               <nav>
                 <ul className="space-y-2">

@@ -1,7 +1,7 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
 ## Project Overview
-MTG AI Commander Deck Builder - A Next.js application that generates Commander/EDH decks using AI and local card database.
+**JankBuild** (jankbuild.com) - An AI-powered Commander/EDH deck builder with comprehensive collection management. A Next.js application that generates Commander decks using AI and local card database.
 
 ## Key Features
 - **Local Card Database**: 31,483 cards from MTGJson with EDHREC rankings, saltiness scores, power levels (0-10), and 20+ auto-generated tags

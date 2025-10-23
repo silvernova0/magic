@@ -53,11 +53,11 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Magic: The Gathering Deck Builder
+          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+            🎴 JankBuild
           </CardTitle>
           <CardDescription className="text-center">
-            Sign in to manage your collection and build decks
+            AI-Powered Commander Deck Builder
           </CardDescription>
         </CardHeader>
         <CardContent>
