@@ -1,11 +1,8 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import type { Deck, Decklist } from '../../types';
 import DeckBuilderForm from '../../components/deckbuilder/DeckBuilderForm';
-import DeckDisplay from '../../components/deckbuilder/DeckDisplay';
 import LoadingSpinner from '../../components/deckbuilder/LoadingSpinner';
-import SaveDeckForm from '../../components/deckbuilder/SaveDeckForm';
 import CardBrowser from '../../components/deckbuilder/CardBrowser';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -13,8 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const DeckBuilderPage: React.FC = () => {
-  const [deck, setDeck] = useState<Deck | null>(null);
-  const [decklist, setDecklist] = useState<Decklist | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -29,8 +24,6 @@ const DeckBuilderPage: React.FC = () => {
   }) => {
     setIsLoading(true);
     setError(null);
-    setDecklist(null);
-    setDeck(null);
     try {
       const response = await fetch('/api/commander/build', {
         method: 'POST',
@@ -46,19 +39,17 @@ const DeckBuilderPage: React.FC = () => {
       }
 
       const result = await response.json();
-      setDeck(result.deck);
-      setDecklist(result.decklist);
+      
+      // Redirect to the generated deck instead of showing it here
+      if (result.deck && result.deck.id) {
+        router.push(`/decks/${result.deck.id}?new=true`);
+      }
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred. Check the console for details.');
-    } finally {
       setIsLoading(false);
     }
-  }, []);
-
-  const handleDeckSaved = (updatedDeck: Deck) => {
-    setDeck(updatedDeck);
-  };
+  }, [router]);
 
   return (
     <div className="container mx-auto max-w-7xl">
@@ -86,27 +77,34 @@ const DeckBuilderPage: React.FC = () => {
               {isLoading && (
                 <div className="m-auto text-center">
                   <LoadingSpinner />
-                  <p className="mt-4 text-lg text-purple-600 animate-pulse">Brewing your masterpiece...</p>
+                  <div className="mt-6 space-y-3">
+                    <p className="text-lg text-purple-600 font-semibold animate-pulse">Brewing your masterpiece...</p>
+                    <p className="text-sm text-muted-foreground">Analyzing commander synergies and meta decks</p>
+                    <p className="text-sm text-muted-foreground">Selecting the perfect 100 cards</p>
+                    <p className="text-xs text-muted-foreground mt-4">You'll be redirected when complete</p>
+                  </div>
                 </div>
               )}
               {error && (
-                <div className="m-auto text-center text-red-500 bg-red-50 dark:bg-red-950 p-6 rounded-lg border border-red-200 dark:border-red-800">
-                  <h3 className="text-xl font-bold mb-2">Error</h3>
-                  <p>{error}</p>
+                <div className="m-auto text-center">
+                  <div className="text-red-500 bg-red-50 dark:bg-red-950 p-6 rounded-lg border border-red-200 dark:border-red-800">
+                    <h3 className="text-xl font-bold mb-2">Error</h3>
+                    <p>{error}</p>
+                  </div>
+                  <Button 
+                    onClick={() => setError(null)} 
+                    variant="outline" 
+                    className="mt-4"
+                  >
+                    Try Again
+                  </Button>
                 </div>
               )}
-              {deck && decklist && !isLoading && (
-                <>
-                  <DeckDisplay decklist={decklist} initialDeckName={deck.name} isSaved={deck.status === 'SAVED'} />
-                  {deck.status === 'GENERATED' && (
-                    <SaveDeckForm deckId={deck.id} onDeckSaved={handleDeckSaved} />
-                  )}
-                </>
-              )}
-              {!decklist && !isLoading && !error && (
+              {!isLoading && !error && (
                 <div className="m-auto text-center text-muted-foreground">
-                  <p className="text-xl">Your generated deck will appear here.</p>
-                  <p className="mt-2 text-sm">Fill out the form and let the magic begin!</p>
+                  <p className="text-xl mb-4">Ready to build your Commander deck?</p>
+                  <p className="text-sm mb-2">Fill out the form and click "Build Deck"</p>
+                  <p className="text-xs text-muted-foreground">Your deck will be generated and saved automatically</p>
                 </div>
               )}
             </div>

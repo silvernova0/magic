@@ -58,7 +58,7 @@ const CategoryDisplay: React.FC<{
               <span className="flex-1">{card}</span>
               <div className="flex items-center gap-1">
                 {/* Power Level */}
-                {metadata && (
+                {metadata && metadata.powerLevel != null && (
                   <div className="flex items-center gap-0.5">
                     <Star className={`w-3 h-3 ${getPowerLevelColor(metadata.powerLevel)}`} />
                     <span className={`text-xs ${getPowerLevelColor(metadata.powerLevel)}`}>

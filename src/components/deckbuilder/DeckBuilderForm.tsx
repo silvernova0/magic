@@ -28,6 +28,46 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
   const [powerLevel, setPowerLevel] = useState('3');
   const [useCollectionOnly, setUseCollectionOnly] = useState(false);
   const [collection, setCollection] = useState('');
+  const [collectionStats, setCollectionStats] = useState<{ totalCards: number; uniqueCards: number } | null>(null);
+  const [loadingCollection, setLoadingCollection] = useState(false);
+
+  // Fetch user's collection when "use collection only" is enabled
+  useEffect(() => {
+    const fetchUserCollection = async () => {
+      if (!useCollectionOnly) {
+        setCollection('');
+        setCollectionStats(null);
+        return;
+      }
+
+      setLoadingCollection(true);
+      try {
+        const response = await fetch('/api/collection');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.cards) {
+            // Format collection as "quantity cardname" per line
+            const collectionText = data.cards
+              .map((card: any) => `${card.quantity} ${card.name}`)
+              .join('\n');
+            setCollection(collectionText);
+            setCollectionStats(data.stats);
+          }
+        } else if (response.status === 401) {
+          alert('Please sign in to use your collection');
+          setUseCollectionOnly(false);
+        }
+      } catch (error) {
+        console.error('Error fetching collection:', error);
+        alert('Failed to load your collection. Please try again.');
+        setUseCollectionOnly(false);
+      } finally {
+        setLoadingCollection(false);
+      }
+    };
+
+    fetchUserCollection();
+  }, [useCollectionOnly]);
 
   // Auto-complete commander search using local database
   useEffect(() => {
@@ -38,11 +78,12 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
       }
 
       try {
-        // Use local card database with commander tag and EDHREC ranking
+        // Use local card database with isCommander filter and EDHREC ranking
         const params = new URLSearchParams({
           name: commander,
-          tags: 'commander',
-          sort: 'edhrecRank',
+          isCommander: 'true',
+          sortBy: 'edhrecRank',
+          sortOrder: 'asc',
           limit: '10',
         });
         
@@ -71,8 +112,8 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (useCollectionOnly && !collection.trim()) {
-      alert('Please provide your card collection or uncheck "Use Collection Only"');
+    if (useCollectionOnly && (!collection.trim() || !collectionStats)) {
+      alert('Please import your collection first or uncheck "Build from my collection only"');
       return;
     }
     onSubmit({
@@ -104,11 +145,12 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
               onChange={(e) => setCommander(e.target.value)}
               placeholder="e.g., Atraxa, Praetors' Voice (leave empty for AI suggestion)"
               disabled={isLoading}
+              autoComplete="off"
             />
             
             {/* Commander Suggestions Dropdown */}
             {commanderSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 w-full mt-1 bg-card border-2 border-primary/50 rounded-md shadow-2xl max-h-60 overflow-y-auto">
                 {commanderSuggestions.map((suggestion, idx) => (
                   <button
                     key={idx}
@@ -117,7 +159,7 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
                       setCommander(suggestion);
                       setCommanderSuggestions([]);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-accent transition-colors"
+                    className="w-full text-left px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border last:border-b-0"
                   >
                     {suggestion}
                   </button>
@@ -229,21 +271,40 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
             </p>
           </div>
 
-          {/* Collection Input */}
+          {/* Collection Stats */}
           {useCollectionOnly && (
             <div className="space-y-2">
-              <Label htmlFor="collection">Your Card Collection</Label>
-              <Textarea
-                id="collection"
-                value={collection}
-                onChange={(e) => setCollection(e.target.value)}
-                rows={8}
-                placeholder="Paste your card list here, one card per line:&#10;Sol Ring&#10;Swords to Plowshares&#10;Rhystic Study&#10;..."
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                List your available cards (one per line)
-              </p>
+              {loadingCollection ? (
+                <div className="bg-muted/50 rounded-lg p-4 text-center">
+                  <p className="text-sm text-muted-foreground">Loading your collection...</p>
+                </div>
+              ) : collectionStats ? (
+                <div className="bg-gradient-to-br from-purple-500/10 to-indigo-500/10 rounded-lg p-4 border border-purple-500/20">
+                  <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <span className="text-lg">📚</span>
+                    Your Collection
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Total Cards:</p>
+                      <p className="font-bold text-lg">{collectionStats.totalCards}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Unique Cards:</p>
+                      <p className="font-bold text-lg">{collectionStats.uniqueCards}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    The AI will only use cards from your uploaded collection
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-orange-500/10 rounded-lg p-4 border border-orange-500/20">
+                  <p className="text-sm text-orange-700 dark:text-orange-300">
+                    ⚠️ No collection found. Please <a href="/import" className="underline font-semibold hover:text-orange-600">import your collection</a> first.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

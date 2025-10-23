@@ -48,6 +48,7 @@ export interface DeckBuildRequest {
   powerLevel: string; // Moxfield bracket 1-5
   useCollectionOnly: boolean; // true = only use user's cards, false = any cards
   userCollection?: string; // User's card collection (one per line)
+  referenceDecks?: any[]; // Reference decks from EDHREC/MTGTop8/Moxfield for this commander
 }
 
 export interface DeckBuildResponse {
@@ -77,6 +78,7 @@ export async function buildCommanderDeckWithAI(
     powerLevel,
     useCollectionOnly,
     userCollection,
+    referenceDecks,
   } = request;
 
   // Fetch real-time meta data from scrapers
@@ -90,6 +92,30 @@ export async function buildCommanderDeckWithAI(
     console.log('Scraped data loaded:', getScraperSummary(scrapedData));
   } catch (error) {
     console.warn('Failed to load scraped data, continuing without real-time meta:', error);
+  }
+
+  // Add reference decks if available
+  if (referenceDecks && referenceDecks.length > 0) {
+    metaContext += `\n\n=== REFERENCE DECKS FOR ${commander?.toUpperCase()} ===\n`;
+    metaContext += `Found ${referenceDecks.length} popular decks featuring this commander:\n\n`;
+    
+    referenceDecks.slice(0, 5).forEach((deck: any, i: number) => {
+      metaContext += `${i + 1}. ${deck.name} (${deck.source})\n`;
+      metaContext += `   Power Level: Bracket ${deck.powerLevel || 'Unknown'}\n`;
+      metaContext += `   Theme: ${deck.theme || 'Unknown'}\n`;
+      
+      if (deck.decklist) {
+        try {
+          const cardList = JSON.parse(deck.decklist);
+          metaContext += `   Sample Cards: ${cardList.slice(0, 10).join(', ')}\n`;
+        } catch {
+          metaContext += `   Decklist available\n`;
+        }
+      }
+      metaContext += '\n';
+    });
+    
+    metaContext += 'Use these decks as inspiration for popular card choices and synergies.\n\n';
   }
 
   // Build comprehensive system instruction with EDH knowledge

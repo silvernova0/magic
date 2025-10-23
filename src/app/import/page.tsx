@@ -1,4 +1,6 @@
-import { Button } from '@/components/ui/button';
+'use client';
+
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -6,115 +8,62 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import Papa from 'papaparse';
-import { prisma } from '@/lib/prisma';
-import { fetchScryfallCard } from '@/lib/scryfall';
-import { getCurrentUser } from '@/lib/user';
+import CollectionImportForm from '@/components/import/CollectionImportForm';
+import DeckImportForm from '@/components/import/DeckImportForm';
+import { useRouter } from 'next/navigation';
 
+export default function ImportPage() {
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const router = useRouter();
 
-export default async function ImportPage() {
-  // Server action for importing collection CSV
-  async function importCollection(formData: FormData) {
-    'use server';
-    const user = await getCurrentUser();
-    if (!user) throw new Error('User not found');
-    
-    const text = formData.get('collection') as string;
-    const enrich = formData.get('enrich') === 'on';
-    if (!text) return;
-    
-    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-    // @ts-ignore
-    const data: any[] = parsed.data;
-    for (const row of data) {
-      const count = parseInt(row['Count'] || row['count'] || '1');
-      const name = row['Name'] || row['name'];
-      if (!name) continue;
-      const setName = row['Edition'] || row['edition'] || '';
+  const handleCollectionImport = async (data: { collection: string; enrich: boolean }) => {
+    try {
+      const response = await fetch('/api/import/collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-      let scry = null;
-      if (enrich) {
-        // prefer set code if present; otherwise fuzzy search by name
-        const setCodeMatch = (row['Edition'] || row['edition'] || '').match(/[A-Za-z0-9]+/);
-        const setCode = setCodeMatch ? setCodeMatch[0] : undefined;
-        scry = await fetchScryfallCard(name, setCode);
-      }
+      const result = await response.json();
 
-      const existing = await prisma.userCard.findFirst({ where: { name, setName, userId: user.id } });
-      if (existing) {
-        await prisma.userCard.update({ where: { id: existing.id }, data: { quantity: existing.quantity + count } });
+      if (response.ok) {
+        setMessage({ type: 'success', text: result.message || 'Collection imported successfully!' });
+        setTimeout(() => {
+          router.push('/collection');
+        }, 2000);
       } else {
-        await prisma.userCard.create({ data: {
-          name,
-          manaCost: scry?.mana_cost || '',
-          cmc: scry?.cmc || 0,
-          colors: (scry?.colors || []).join(','),
-          type_line: scry?.type_line || '',
-          oracleText: scry?.oracle_text || '',
-          power: scry?.power || '',
-          toughness: scry?.toughness || '',
-          setName: scry?.set_name || setName,
-          rarity: scry?.rarity || '',
-          imageUrl: scry?.image_uri || '',
-          quantity: count,
-          userId: user.id,
-        } });
+        setMessage({ type: 'error', text: result.error || 'Failed to import collection' });
       }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'An error occurred during import' });
     }
-  }
+  };
 
-  // Server action for importing deck text
-  async function importDeck(formData: FormData) {
-    'use server';
-    const text = formData.get('deck') as string;
-    const enrich = formData.get('enrichDeck') === 'on';
-    if (!text) return;
+  const handleDeckImport = async (data: { deck: string; enrich: boolean }) => {
+    try {
+      const response = await fetch('/api/import/deck', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
 
-    const user = await getCurrentUser();
-    if (!user) throw new Error('User not found');
-    
-    const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
-    for (const line of lines) {
-      // Expected formats: "1 Card Name (SET) 123" or "8 Snow-Covered Forest (KHM) 284"
-      const match = line.match(/^(\d+)\s+(.+?)(?:\s+\(([^)]+)\))?(?:\s+(\S+))?$/);
-      if (!match) continue;
-      const qty = parseInt(match[1]);
-      const name = match[2];
-      const edition = match[3] || '';
-      const setName = edition;
+      const result = await response.json();
 
-      let scry = null;
-      if (enrich) {
-        scry = await fetchScryfallCard(name, edition || undefined);
-      }
-
-      const existing = await prisma.userCard.findFirst({ where: { name, setName, userId: user.id } });
-      if (existing) {
-        await prisma.userCard.update({ where: { id: existing.id }, data: { quantity: existing.quantity + qty } });
+      if (response.ok) {
+        setMessage({ type: 'success', text: result.message || 'Deck imported successfully!' });
+        setTimeout(() => {
+          router.push('/collection');
+        }, 2000);
       } else {
-        await prisma.userCard.create({ data: {
-          name,
-          manaCost: scry?.mana_cost || '',
-          cmc: scry?.cmc || 0,
-          colors: (scry?.colors || []).join(','),
-          type_line: scry?.type_line || '',
-          oracleText: scry?.oracle_text || '',
-          power: scry?.power || '',
-          toughness: scry?.toughness || '',
-          setName: scry?.set_name || setName,
-          rarity: scry?.rarity || '',
-          imageUrl: scry?.image_uri || '',
-          quantity: qty,
-          userId: user.id,
-        } });
+        setMessage({ type: 'error', text: result.error || 'Failed to import deck' });
       }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'An error occurred during import' });
     }
-  }
+  };
 
   return (
     <div className="container mx-auto max-w-7xl">
-      {/* Hero Header */}
       <div className="mb-8 p-8 rounded-xl bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/20">
         <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent mb-2">
           Import / Export
@@ -124,6 +73,18 @@ export default async function ImportPage() {
         </p>
       </div>
 
+      {message && (
+        <div
+          className={`mb-6 p-4 rounded-lg border-2 ${
+            message.type === 'success'
+              ? 'bg-green-50 dark:bg-green-950 border-green-500 text-green-700 dark:text-green-300'
+              : 'bg-red-50 dark:bg-red-950 border-red-500 text-red-700 dark:text-red-300'
+          }`}
+        >
+          {message.text}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <Card className="group hover:shadow-xl transition-all duration-300 border-2 hover:border-purple-500/50">
           <CardHeader>
@@ -132,33 +93,11 @@ export default async function ImportPage() {
               Import Collection
             </CardTitle>
             <CardDescription className="text-base">
-              Paste your collection data here. The expected format is a CSV with "Count" and "Name" columns.
+              Upload a CSV file or paste your collection data. Format: Count, Name, Edition (optional).
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={importCollection} className="flex flex-col">
-              <Textarea 
-                name="collection" 
-                placeholder="Count,Name,Edition
-1,Sol Ring,Commander 2021
-4,Lightning Bolt,Alpha
-..." 
-                className="min-h-[250px] mb-4 font-mono text-sm" 
-              />
-              <label className="flex items-center gap-2 mb-4 cursor-pointer group/check">
-                <input 
-                  type="checkbox" 
-                  name="enrich" 
-                  className="w-4 h-4 cursor-pointer" 
-                />
-                <span className="group-hover/check:text-purple-600 transition-colors">
-                  ✨ Enrich with Scryfall data (slower, but more complete)
-                </span>
-              </label>
-              <Button type="submit" size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
-                Import Collection
-              </Button>
-            </form>
+            <CollectionImportForm onSubmit={handleCollectionImport} />
           </CardContent>
         </Card>
 
@@ -169,44 +108,21 @@ export default async function ImportPage() {
               Import Deck
             </CardTitle>
             <CardDescription className="text-base">
-              Paste your decklist here. The expected format is one card per line, like "1 Sol Ring".
+              Upload a deck file or paste your decklist. Format: "quantity cardname (SET) number".
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form action={importDeck} className="flex flex-col">
-              <Textarea 
-                name="deck" 
-                placeholder="1 Sol Ring (C21) 314
-1 Command Tower
-4 Lightning Bolt (LEA) 161
-..." 
-                className="min-h-[250px] mb-4 font-mono text-sm" 
-              />
-              <label className="flex items-center gap-2 mb-4 cursor-pointer group/check">
-                <input 
-                  type="checkbox" 
-                  name="enrichDeck" 
-                  className="w-4 h-4 cursor-pointer" 
-                />
-                <span className="group-hover/check:text-indigo-600 transition-colors">
-                  ✨ Enrich with Scryfall data (slower, but more complete)
-                </span>
-              </label>
-              <Button type="submit" size="lg" className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700">
-                Import Deck
-              </Button>
-            </form>
+            <DeckImportForm onSubmit={handleDeckImport} />
           </CardContent>
         </Card>
       </div>
 
-      {/* Info Cards */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
           <CardContent className="pt-6">
             <h3 className="font-semibold text-lg mb-2">💡 CSV Format</h3>
             <p className="text-sm text-muted-foreground">
-              Collection imports support CSV with Count, Name, and optional Edition columns
+              Collection imports support CSV with Count, Name, and optional Edition columns. Upload .csv or .txt files (max 2MB).
             </p>
           </CardContent>
         </Card>
@@ -214,15 +130,15 @@ export default async function ImportPage() {
           <CardContent className="pt-6">
             <h3 className="font-semibold text-lg mb-2">⚡ Deck Format</h3>
             <p className="text-sm text-muted-foreground">
-              Deck imports support standard format: "quantity cardname (SET) number"
+              Deck imports support standard format: "quantity cardname (SET) number". Upload .txt, .dec, or .dck files (max 2MB).
             </p>
           </CardContent>
         </Card>
         <Card className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
           <CardContent className="pt-6">
-            <h3 className="font-semibold text-lg mb-2">✨ Enrichment</h3>
+            <h3 className="font-semibold text-lg mb-2">🔒 Security</h3>
             <p className="text-sm text-muted-foreground">
-              Enable enrichment to fetch images, prices, and complete card data from Scryfall
+              Files are validated for type and size. Only CSV and text files under 2MB are accepted for your protection.
             </p>
           </CardContent>
         </Card>

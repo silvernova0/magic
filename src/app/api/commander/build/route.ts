@@ -16,6 +16,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields (theme, powerLevel)' }, { status: 400 });
     }
 
+    // If commander is specified, fetch reference decks from database
+    let referenceDecks: any[] = [];
+    if (commander && commander.trim()) {
+      try {
+        // Search for scraped decks featuring this commander from EDHREC, MTGTop8, and Moxfield
+        const commanderDecks = await prisma.commanderDeck.findMany({
+          where: {
+            commander: {
+              contains: commander,
+            },
+          },
+          take: 10,
+          orderBy: [
+            { popularity: 'desc' },
+            { scrapedAt: 'desc' },
+          ],
+        });
+
+        referenceDecks = commanderDecks;
+        console.log(`Found ${referenceDecks.length} reference decks for ${commander} from ${[...new Set(commanderDecks.map(d => d.source))].join(', ')}`);
+      } catch (error) {
+        console.warn('Failed to fetch reference decks:', error);
+      }
+    }
+
     // Prepare the deck build request
     const deckRequest: DeckBuildRequest = {
       commander: commander || undefined,
@@ -24,6 +49,7 @@ export async function POST(req: NextRequest) {
       powerLevel,
       useCollectionOnly: useCollectionOnly || false,
       userCollection: useCollectionOnly ? collection : undefined,
+      referenceDecks, // Pass reference decks to AI
     };
 
     // Build the deck using Gemini AI
