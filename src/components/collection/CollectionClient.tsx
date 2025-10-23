@@ -111,13 +111,64 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
 
       if (response.ok) {
         const newCard = await response.json();
-        setCards([...cards, newCard]);
+        // Check if card already exists (update) or is new
+        const existingIndex = cards.findIndex(c => c.id === newCard.id);
+        if (existingIndex >= 0) {
+          const updatedCards = [...cards];
+          updatedCards[existingIndex] = newCard;
+          setCards(updatedCards);
+        } else {
+          setCards([newCard, ...cards]);
+        }
         setSelectedCard(null);
         setCardNameInput('');
         setQuantity(1);
       }
     } catch (error) {
       console.error('Error adding card:', error);
+    }
+  };
+
+  // Update card quantity
+  const handleUpdateQuantity = async (cardId: string, newQuantity: number) => {
+    try {
+      const response = await fetch(`/api/collection/${cardId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.deleted) {
+          // Card was removed (quantity set to 0)
+          setCards(cards.filter(c => c.id !== cardId));
+        } else {
+          // Card quantity updated
+          setCards(cards.map(c => c.id === cardId ? data.card : c));
+        }
+      }
+    } catch (error) {
+      console.error('Error updating card:', error);
+    }
+  };
+
+  // Delete card from collection
+  const handleDeleteCard = async (cardId: string, cardName: string) => {
+    if (!confirm(`Remove "${cardName}" from your collection?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/collection/${cardId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setCards(cards.filter(c => c.id !== cardId));
+      }
+    } catch (error) {
+      console.error('Error deleting card:', error);
     }
   };
 
@@ -368,7 +419,39 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="text-sm text-muted-foreground">Quantity:</span>
-                    <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{card.quantity}x</span>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUpdateQuantity(card.id, Math.max(0, card.quantity - 1))}
+                        disabled={card.quantity <= 0}
+                      >
+                        −
+                      </Button>
+                      <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 w-12 text-center">
+                        {card.quantity}x
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleUpdateQuantity(card.id, card.quantity + 1)}
+                      >
+                        +
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Card Actions */}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                      onClick={() => handleDeleteCard(card.id, card.name)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Remove
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
