@@ -41,27 +41,62 @@ An AI-powered Commander/EDH deck builder with comprehensive card collection mana
 - **Commander Validation** - Identifies legal commanders and format legalities
 - **Price Data** - Purchase URLs for CardKingdom, TCGPlayer, Cardmarket
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 20+
-- npm or yarn
-
-### Installation
-
-1. **Clone the repository**
+### Development Setup
 ```bash
+# 1. Clone and install
 git clone https://github.com/silvernova0/magic.git
 cd magic
-```
-
-2. **Install dependencies**
-```bash
 npm install
+
+# 2. Setup environment
+cp .env.production.template .env
+# Edit .env with your settings (see below)
+
+# 3. Generate Prisma client
+npx prisma generate
+npx prisma db push
+
+# 4. Import card database (optional)
+npm run import:mtgjson:full
+
+# 5. Start development server
+npm run dev
+# Access at http://localhost:3000
 ```
 
-3. **Set up environment variables**
-Create a `.env` file:
+### Production Deployment
+
+#### 🏠 Self-Hosting (Recommended for full control)
+**5-minute setup with Docker + Nginx Proxy Manager:**
+
+```powershell
+# Windows Quick Start
+.\setup.ps1
+
+# Or manually with Docker:
+docker-compose build
+docker-compose up -d
+# Access at http://localhost:3002
+
+# Or with Node.js:
+npm ci && npm run build && npm run start
+```
+
+**📖 Complete Self-Hosting Guide:** See `QUICK_START.md` and `SELF_HOSTING.md`
+
+#### ☁️ Cloud Hosting (Vercel)
+```bash
+# Deploy to Vercel
+vercel deploy --prod
+```
+
+**📖 Cloud Deployment Guide:** See `DEPLOYMENT_CHECKLIST.md`
+
+### Environment Variables (.env)
+
+Required settings for production:
 ```env
 # Auth
 NEXTAUTH_SECRET=your_secret_here

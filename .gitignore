@@ -19,6 +19,8 @@
 
 # production
 /build
+.next/standalone
+.next/static
 
 # misc
 .DS_Store
