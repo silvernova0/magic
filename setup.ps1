@@ -1,5 +1,5 @@
 # JankBuild Quick Start Script for Windows
-# Run this script to set up and start JankBuild on port 3002
+# Run this script to set up and start JankBuild on port 3050
 
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "  JankBuild Self-Hosting Setup" -ForegroundColor Cyan
@@ -94,8 +94,8 @@ switch ($choice) {
                 Write-Host "  JankBuild is now running!" -ForegroundColor Green
                 Write-Host "=====================================" -ForegroundColor Cyan
                 Write-Host ""
-                Write-Host "Local access: http://localhost:3002" -ForegroundColor White
-                Write-Host "Configure Nginx Proxy Manager to forward jankbuild.com → 192.168.0.108:3002" -ForegroundColor Yellow
+                Write-Host "Local access: http://localhost:3050" -ForegroundColor White
+                Write-Host "Configure Nginx Proxy Manager to forward jankbuild.com → 192.168.0.108:3050" -ForegroundColor Yellow
                 Write-Host ""
                 Write-Host "Useful commands:" -ForegroundColor Cyan
                 Write-Host "  docker-compose logs -f        View logs" -ForegroundColor White
@@ -142,7 +142,7 @@ switch ($choice) {
                 Write-Host "To start the application, run:" -ForegroundColor Yellow
                 Write-Host "  npm run start" -ForegroundColor White
                 Write-Host ""
-                Write-Host "The application will run on: http://localhost:3002" -ForegroundColor White
+                Write-Host "The application will run on: http://localhost:3050" -ForegroundColor White
                 Write-Host ""
                 Write-Host "To run in background, use Method 3 (PM2)" -ForegroundColor Yellow
             } else {
@@ -198,7 +198,7 @@ switch ($choice) {
             Write-Host "  JankBuild is now running!" -ForegroundColor Green
             Write-Host "=====================================" -ForegroundColor Cyan
             Write-Host ""
-            Write-Host "Local access: http://localhost:3002" -ForegroundColor White
+            Write-Host "Local access: http://localhost:3050" -ForegroundColor White
             Write-Host ""
             Write-Host "PM2 commands:" -ForegroundColor Cyan
             Write-Host "  pm2 status               View status" -ForegroundColor White
@@ -224,7 +224,7 @@ Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1. Configure Nginx Proxy Manager:" -ForegroundColor Yellow
 Write-Host "   - Open NPM: http://192.168.0.108:81" -ForegroundColor White
-Write-Host "   - Add Proxy Host: jankbuild.com → 192.168.0.108:3002" -ForegroundColor White
+Write-Host "   - Add Proxy Host: jankbuild.com → 192.168.0.108:3050" -ForegroundColor White
 Write-Host "   - Enable SSL with Let's Encrypt" -ForegroundColor White
 Write-Host ""
 Write-Host "2. Import Card Database (optional):" -ForegroundColor Yellow

@@ -5,7 +5,7 @@ Quick reference for configuring JankBuild with Nginx Proxy Manager on your Windo
 ## Your System Configuration
 
 **IP Address:** `192.168.0.108`  
-**JankBuild Port:** `3002` (localhost only)  
+**JankBuild Port:** `3050` (localhost only)  
 **Domain:** `jankbuild.com`
 
 **Occupied Ports (from your netstat):**
@@ -13,7 +13,7 @@ Quick reference for configuring JankBuild with Nginx Proxy Manager on your Windo
 - 8000, 8080, 8083, 8443, 9443: Other Docker services
 - 3389: RDP
 - 5432: PostgreSQL (localhost)
-- **3002: JankBuild** ✅ (configured)
+- **3050: JankBuild** ✅ (configured)
 
 ## Step 1: Start JankBuild
 
@@ -38,7 +38,7 @@ npm run start
 
 Verify it's running:
 ```powershell
-curl http://localhost:3002
+curl http://localhost:3050
 ```
 
 ## Step 2: Configure Nginx Proxy Manager
@@ -59,7 +59,7 @@ Domain Names:
 
 Scheme: http
 Forward Hostname/IP: 192.168.0.108
-Forward Port: 3002
+Forward Port: 3050
 
 [✓] Cache Assets
 [✓] Block Common Exploits
@@ -110,7 +110,7 @@ A Record:
 
 ### Test Local Access
 ```powershell
-curl http://localhost:3002
+curl http://localhost:3050
 # Should return HTML
 ```
 
@@ -140,7 +140,7 @@ In NPM → Proxy Host → "Advanced" tab:
 ```nginx
 # API routes optimization
 location /api/ {
-    proxy_pass http://192.168.0.108:3002;
+    proxy_pass http://192.168.0.108:3050;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection 'upgrade';
@@ -153,7 +153,7 @@ location /api/ {
 
 # Static assets caching (30 days)
 location /_next/static/ {
-    proxy_pass http://192.168.0.108:3002;
+    proxy_pass http://192.168.0.108:3050;
     proxy_cache_valid 200 30d;
     add_header Cache-Control "public, immutable";
 }
@@ -192,23 +192,23 @@ limit_req zone=api_limit burst=20 nodelay;
 **Solutions:**
 1. Verify JankBuild is running:
    ```powershell
-   curl http://localhost:3002
+   curl http://localhost:3050
    docker ps  # or pm2 status
    ```
 
 2. Check Forward IP in NPM:
    - Should be `192.168.0.108` or `host.docker.internal`
-   - Port should be `3002`
+   - Port should be `3050`
 
 3. Test from NPM container:
    ```powershell
-   docker exec -it <npm-container> curl http://host.docker.internal:3002
+   docker exec -it <npm-container> curl http://host.docker.internal:3050
    ```
 
 4. Check Windows Firewall:
    ```powershell
-   # Allow port 3002 (if needed)
-   New-NetFirewallRule -DisplayName "JankBuild" -Direction Inbound -LocalPort 3002 -Protocol TCP -Action Allow
+   # Allow port 3050 (if needed)
+   New-NetFirewallRule -DisplayName "JankBuild" -Direction Inbound -LocalPort 3050 -Protocol TCP -Action Allow
    ```
 
 ### Issue: SSL Certificate Failed
@@ -298,7 +298,7 @@ docker-compose restart
 docker-compose logs -f
 
 # Test local access
-curl http://localhost:3002
+curl http://localhost:3050
 
 # Test public access
 curl https://jankbuild.com
@@ -314,11 +314,11 @@ docker-compose up -d
 
 ## Configuration Checklist
 
-- [ ] JankBuild running on port 3002
-- [ ] Can access `http://localhost:3002` locally
+- [ ] JankBuild running on port 3050
+- [ ] Can access `http://localhost:3050` locally
 - [ ] NPM proxy host created for `jankbuild.com`
 - [ ] Forward hostname: `192.168.0.108` or `host.docker.internal`
-- [ ] Forward port: `3002`
+- [ ] Forward port: `3050`
 - [ ] SSL certificate requested and active
 - [ ] Can access `https://jankbuild.com` in browser
 - [ ] SSL certificate shows valid (green padlock)
@@ -336,8 +336,8 @@ docker-compose up -d
 ---
 
 **Your Configuration Summary:**
-- **Local URL**: `http://localhost:3002`
+- **Local URL**: `http://localhost:3050`
 - **Public URL**: `https://jankbuild.com`
 - **NPM Admin**: `http://192.168.0.108:81`
 - **Server IP**: `192.168.0.108`
-- **JankBuild Port**: `3002`
+- **JankBuild Port**: `3050`

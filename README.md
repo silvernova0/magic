@@ -78,7 +78,7 @@ npm run dev
 # Or manually with Docker:
 docker-compose build
 docker-compose up -d
-# Access at http://localhost:3002
+# Access at http://localhost:3050
 
 # Or with Node.js:
 npm ci && npm run build && npm run start

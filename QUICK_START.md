@@ -20,7 +20,7 @@ This is a **quick reference** for self-hosting JankBuild. See `SELF_HOSTING.md` 
 
 # 3. Configure Nginx Proxy Manager:
 #    Domain: jankbuild.com
-#    Forward: http://192.168.0.108:3002
+#    Forward: http://192.168.0.108:3050
 #    Enable SSL
 
 # Done! Access at https://jankbuild.com
@@ -38,7 +38,7 @@ npm run build
 # 3. Start server
 npm run start
 
-# 4. Access at http://localhost:3002
+# 4. Access at http://localhost:3050
 ```
 
 ### Option 3: PM2 Process Manager ⚙️
@@ -68,7 +68,7 @@ pm2 save
 - Domain Names: `jankbuild.com`, `www.jankbuild.com`
 - Scheme: `http`
 - Forward Hostname/IP: `192.168.0.108` (or `host.docker.internal` if NPM in Docker)
-- Forward Port: `3002`
+- Forward Port: `3050`
 - ✅ Cache Assets
 - ✅ Block Common Exploits  
 - ✅ Websockets Support
@@ -83,7 +83,7 @@ pm2 save
 
 ### 3. Test
 ```powershell
-curl http://localhost:3002    # Local access
+curl http://localhost:3050    # Local access
 curl https://jankbuild.com    # Via reverse proxy
 ```
 
@@ -170,7 +170,7 @@ GEMINI_API_KEY=your-api-key-here
 - 5432: PostgreSQL
 
 **JankBuild Configuration:**
-- **Port 3002**: JankBuild (localhost only)
+- **Port 3050**: JankBuild (localhost only)
 - **External Access**: Via Nginx Proxy Manager (ports 80/443)
 
 **Change Port (if needed):**
@@ -190,7 +190,7 @@ ports:
 ### Port Already in Use
 ```powershell
 # Find process
-netstat -ano | findstr :3002
+netstat -ano | findstr :3050
 
 # Kill process
 taskkill /PID <pid> /F
@@ -210,14 +210,14 @@ docker-compose up -d
 ### 502 Bad Gateway (NPM)
 ```powershell
 # 1. Verify JankBuild running
-curl http://localhost:3002
+curl http://localhost:3050
 
 # 2. Check NPM forward settings:
 #    IP: 192.168.0.108 or host.docker.internal
-#    Port: 3002
+#    Port: 3050
 
 # 3. Test from NPM container
-docker exec -it npm curl http://host.docker.internal:3002
+docker exec -it npm curl http://host.docker.internal:3050
 ```
 
 ### Database Issues
@@ -240,7 +240,7 @@ docker-compose up -d
 
 ## ✅ Post-Setup Checklist
 
-- [ ] Application running on port 3002
+- [ ] Application running on port 3050
 - [ ] Nginx Proxy Manager configured
 - [ ] SSL certificate installed
 - [ ] Can access via https://jankbuild.com

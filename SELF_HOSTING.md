@@ -41,8 +41,8 @@ Your system currently uses these ports (occupied):
 ### JankBuild Port Assignment
 **Recommended configuration:**
 - **External**: Access via Nginx Proxy Manager (ports 80/443)
-- **Internal**: JankBuild runs on port **3002** (localhost only)
-- **Alternative**: Port **3100** (if 3002 is needed elsewhere)
+- **Internal**: JankBuild runs on port **3050** (localhost only)
+- **Alternative**: Port **3100** (if 3050 is needed elsewhere)
 
 This configuration keeps JankBuild isolated and only accessible through your reverse proxy.
 
@@ -94,7 +94,7 @@ docker-compose ps
 #### Step 4: Verify Application
 ```powershell
 # Test internal access
-curl http://localhost:3002
+curl http://localhost:3050
 
 # Check container health
 docker ps
@@ -121,7 +121,7 @@ npm run build
 ```powershell
 # Set environment
 $env:NODE_ENV="production"
-$env:PORT="3002"
+$env:PORT="3050"
 
 # Start server
 npm run start
@@ -158,7 +158,7 @@ nssm install JankBuild "C:\Program Files\nodejs\node.exe" "C:\magicapp\node_modu
 
 # Configure service
 nssm set JankBuild AppDirectory C:\magicapp
-nssm set JankBuild AppEnvironmentExtra PORT=3002 NODE_ENV=production
+nssm set JankBuild AppEnvironmentExtra PORT=3050 NODE_ENV=production
 nssm set JankBuild Start SERVICE_AUTO_START
 
 # Start service
@@ -177,7 +177,7 @@ nssm start JankBuild
 - **Domain Names**: `jankbuild.com`, `www.jankbuild.com`
 - **Scheme**: `http`
 - **Forward Hostname/IP**: `192.168.0.108` (or `host.docker.internal` if NPM is in Docker)
-- **Forward Port**: `3002`
+- **Forward Port**: `3050`
 - **Cache Assets**: ✅ Enabled
 - **Block Common Exploits**: ✅ Enabled
 - **Websockets Support**: ✅ Enabled (for Next.js hot reload in dev)
@@ -186,7 +186,7 @@ nssm start JankBuild
 ```nginx
 # API routes optimization
 location /api/ {
-    proxy_pass http://192.168.0.108:3002;
+    proxy_pass http://192.168.0.108:3050;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection 'upgrade';
@@ -199,7 +199,7 @@ location /api/ {
 
 # Static assets caching
 location /_next/static/ {
-    proxy_pass http://192.168.0.108:3002;
+    proxy_pass http://192.168.0.108:3050;
     proxy_cache_valid 200 60d;
     add_header Cache-Control "public, immutable";
 }
@@ -224,7 +224,7 @@ location /_next/static/ {
 ### Step 4: Test Configuration
 ```powershell
 # Test internal access
-curl http://localhost:3002
+curl http://localhost:3050
 
 # Test reverse proxy (without SSL)
 curl http://jankbuild.com
@@ -503,7 +503,7 @@ docker-compose build --no-cache
 docker-compose up -d
 
 # 8. Verify application
-curl http://localhost:3002
+curl http://localhost:3050
 curl https://jankbuild.com
 ```
 
@@ -537,12 +537,12 @@ pm2 set pm2-logrotate:retain 7
 ### Common Issues
 
 #### 1. Port Already in Use
-**Error:** `Port 3002 is already in use`
+**Error:** `Port 3050 is already in use`
 
 **Solution:**
 ```powershell
 # Find process using port
-netstat -ano | findstr :3002
+netstat -ano | findstr :3050
 
 # Kill process (replace PID)
 taskkill /PID <pid> /F
@@ -586,14 +586,14 @@ docker-compose up -d
 **Solutions:**
 ```powershell
 # 1. Verify JankBuild is running
-curl http://localhost:3002
+curl http://localhost:3050
 
 # 2. Check NPM configuration
-# Forward Port should be: 3002
+# Forward Port should be: 3050
 # Forward IP should be: 192.168.0.108 or host.docker.internal
 
 # 3. Test connectivity from NPM container
-docker exec -it npm-container curl http://host.docker.internal:3002
+docker exec -it npm-container curl http://host.docker.internal:3050
 ```
 
 #### 4. Database Locked
@@ -672,7 +672,7 @@ docker stats --no-stream jankbuild
 **Health Check:**
 ```powershell
 # Application health
-curl http://localhost:3002/api/health
+curl http://localhost:3050/api/health
 
 # Database connection
 docker exec jankbuild npx prisma db pull
@@ -716,11 +716,11 @@ git pull && docker-compose build && docker-compose up -d
 Copy-Item prisma\dev.db backups\dev_backup.db
 
 # Health Check
-curl http://localhost:3002
+curl http://localhost:3050
 ```
 
 ### Port Summary
-- **3002**: JankBuild application (localhost only)
+- **3050**: JankBuild application (localhost only)
 - **80/443**: Nginx Proxy Manager → JankBuild
 - **81**: NPM admin panel
 
