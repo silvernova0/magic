@@ -10,6 +10,33 @@ export interface CommanderStats {
   theme?: string;
   popularCards?: string[];
   rank?: number;
+  // Enhanced synergy data
+  synergies?: CardSynergy[];
+  combos?: ComboInfo[];
+  topCards?: TopCard[];
+}
+
+export interface CardSynergy {
+  cardName: string;
+  score: number; // 0-100
+  inclusion: number; // Percentage of decks
+  synType?: string; // 'high-synergy', 'signature', 'staple', 'creature', 'instant', etc.
+}
+
+export interface ComboInfo {
+  name: string;
+  cards: string[];
+  steps: string[];
+  result: string;
+  colors: string[];
+  source?: string;
+}
+
+export interface TopCard {
+  name: string;
+  inclusion: number; // Percentage
+  synergy: number; // Synergy score
+  category: string; // 'creature', 'instant', 'sorcery', etc.
 }
 
 export interface EDHRECData {
@@ -32,6 +59,7 @@ export interface MTGTop8Deck {
   date: string;
   url: string;
   mainboard?: string[];
+  sideboard?: string[];
 }
 
 export interface MTGTop8Data {

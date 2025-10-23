@@ -1,106 +1,93 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
-- [ ] Verify that the copilot-instructions.md file in the .github directory is created.
 
-- [ ] Clarify Project Requirements
-	<!-- Ask for project type, language, and frameworks if not specified. Skip if already provided. -->
+## Project Overview
+MTG AI Commander Deck Builder - A Next.js application that generates Commander/EDH decks using AI and local card database.
 
-- [ ] Scaffold the Project
-	<!--
-	Ensure that the previous step has been marked as completed.
-	Call project setup tool with projectType parameter.
-	Run scaffolding command to create project files and folders.
-	Use '.' as the working directory.
-	If no appropriate projectType is available, search documentation using available tools.
-	Otherwise, create the project structure manually using available file creation tools.
-	-->
+## Key Features
+- **Local Card Database**: 31,483 cards from MTGJson with EDHREC rankings, saltiness scores, power levels (0-10), and 20+ auto-generated tags
+- **AI Deck Builder**: Gemini-powered deck generation with EDHREC/MTGTop8/Moxfield context
+- **Card Browser**: Advanced filtering by tags, type, color identity, power level, saltiness
+- **Deck Display**: Shows power levels, saltiness warnings, game-changer badges for each card
+- **Commander Autocomplete**: Local database search (replaces Scryfall)
 
-- [ ] Customize the Project
-	<!--
-	Verify that all previous steps have been completed successfully and you have marked the step as completed.
-	Develop a plan to modify codebase according to user requirements.
-	Apply modifications using appropriate tools and user-provided references.
-	Skip this step for "Hello World" projects.
-	-->
+## Tech Stack
+- **Frontend**: Next.js 15.5.4 (App Router), React, TypeScript, TailwindCSS
+- **Backend**: Prisma + SQLite, Next.js API Routes
+- **AI**: Google Gemini 2.0 Flash Thinking Experimental
+- **Data**: MTGJson 5.2.2, EDHREC integration
+- **UI Components**: shadcn/ui, Radix UI, Lucide React
 
-- [ ] Install Required Extensions
-	<!-- ONLY install extensions provided mentioned in the get_project_setup_info. Skip this step otherwise and mark as completed. -->
+## Database Setup
+1. Download MTGJson files from https://mtgjson.com/downloads/all-files/
+2. Required: `AtomicCards.json` (~50MB)
+3. Optional: `AllPrintings.json` (~500MB)
+4. Place in `data/mtgjson/` directory
+5. Run: `npm run import:mtgjson:full`
+6. Import takes 2-3 minutes, creates 31,483 card records
 
-- [ ] Compile the Project
-	<!--
-	Verify that all previous steps have been completed.
-	Install any missing dependencies.
-	Run diagnostics and resolve any issues.
-	Check for markdown files in project folder for relevant instructions on how to do this.
-	-->
+## Project Structure
+- `/src/app/` - Next.js App Router pages
+- `/src/components/` - React components
+- `/src/lib/` - Utilities (gemini.ts, prisma.ts)
+- `/scripts/` - Import scripts
+- `/prisma/` - Database schema
+- `/data/mtgjson/` - Card data (gitignored)
 
-- [ ] Create and Run Task
-	<!--
-	Verify that all previous steps have been completed.
-	Check https://code.visualstudio.com/docs/debugtest/tasks to determine if the project needs a task. If so, use the create_and_run_task to create and launch a task based on package.json, README.md, and project structure.
-	Skip this step otherwise.
-	 -->
+## API Endpoints
+- `GET /api/cards/search` - Advanced card search (15+ filters)
+- `GET /api/cards/[nameOrId]` - Single card with metadata
+- `POST /api/commander/build` - AI deck generation
+- `POST /api/commander/suggest` - Commander suggestions
 
-- [ ] Launch the Project
-	<!--
-	Verify that all previous steps have been completed.
-	Prompt user for debug mode, launch only if confirmed.
-	 -->
+## Card Database Tags
+**Mechanical**: card-draw, tutor, removal, ramp, counterspell, token, graveyard, sacrifice, extra-turns, copy, storm, cascade, exile
+**Power Level**: game-changer, high-salt, top-100, top-500, top-1000, reserved-list
+**Leadership**: commander, brawl
+**Type**: creature, instant, sorcery, enchantment, artifact, planeswalker, land
 
-- [ ] Ensure Documentation is Complete
-	<!--
-	Verify that all previous steps have been completed.
-	Verify that README.md and the copilot-instructions.md file in the .github directory exists and contains current project information.
-	Clean up the copilot-instructions.md file in the .github directory by removing all HTML comments.
-	 -->
+## Power Level Scale (0-10)
+- **8-10** (Red): cEDH staples (Mana Crypt, Timetwister, Gaea's Cradle)
+- **6-7.9** (Orange): Optimized (Rhystic Study, Cyclonic Rift)
+- **4-5.9** (Yellow): Focused (Arcane Signet, Cultivate)
+- **0-3.9** (Green): Casual/Budget
 
-<!--
-## Execution Guidelines
-PROGRESS TRACKING:
-- If any tools are available to manage the above todo list, use it to track progress through this checklist.
-- After completing each step, mark it complete and add a summary.
-- Read current todo list status before starting each new step.
+## Saltiness Scale
+- **≥2.0** (Red): Extremely salty (Armageddon, Winter Orb)
+- **1.0-1.9** (Orange): High salt (Rhystic Study, Grand Arbiter)
+- **0.5-0.9** (Yellow): Moderate salt (Cyclonic Rift)
+- **<0.5** (Green): Low salt
 
-COMMUNICATION RULES:
-- Avoid verbose explanations or printing full command outputs.
-- If a step is skipped, state that briefly (e.g. "No extensions needed").
-- Do not explain project structure unless asked.
-- Keep explanations concise and focused.
+## Development Commands
+- `npm run dev` - Start dev server
+- `npm run build` - Build for production
+- `npm run import:mtgjson:full` - Import card database
+- `npx prisma studio` - View database GUI
+- `npx prisma migrate dev` - Run migrations
 
-DEVELOPMENT RULES:
-- Use '.' as the working directory unless user specifies otherwise.
-- Avoid adding media or external links unless explicitly requested.
-- Use placeholders only with a note that they should be replaced.
-- Use VS Code API tool only for VS Code extension projects.
-- Once the project is created, it is already opened in Visual Studio Code—do not suggest commands to open this project in Visual Studio again.
-- If the project setup information has additional rules, follow them strictly.
+## Git Workflow
+- JSON files in `data/mtgjson/` are gitignored (too large)
+- Users download and import locally
+- Keep commits focused and descriptive
 
-FOLDER CREATION RULES:
-- Always use the current directory as the project root.
-- If you are running any terminal commands, use the '.' argument to ensure that the current working directory is used ALWAYS.
-- Do not create a new folder unless the user explicitly requests it besides a .vscode folder for a tasks.json file.
-- If any of the scaffolding commands mention that the folder name is not correct, let the user know to create a new folder with the correct name and then reopen it again in vscode.
+## Documentation Files
+- `CARD_DATABASE.md` - Card database features and API
+- `LOCAL_CARDS_INTEGRATION.md` - Deck builder integration details
+- `GEMINI_SETUP_COMPLETE.md` - AI deck builder setup
+- `GEMINI_DECK_BUILDER.md` - Deck builder usage guide
 
-EXTENSION INSTALLATION RULES:
-- Only install extension specified by the get_project_setup_info tool. DO NOT INSTALL any other extensions.
+## Next Steps
+1. ✅ Local card database integrated into deck builder
+2. Enhance EDHREC scraper (synergy data, combos)
+3. Enhance MTGTop8 scraper (complete decklists)
+4. Enhance Moxfield scraper (all brackets)
+5. Scheduled scraping (cron jobs)
+6. Research Intel OpenVINO for local AI (long-term)
 
-PROJECT CONTENT RULES:
-- If the user has not specified project details, assume they want a "Hello World" project as a starting point.
-- Avoid adding links of any type (URLs, files, folders, etc.) or integrations that are not explicitly required.
-- Avoid generating images, videos, or any other media files unless explicitly requested.
-- If you need to use any media assets as placeholders, let the user know that these are placeholders and should be replaced with the actual assets later.
-- Ensure all generated components serve a clear purpose within the user's requested workflow.
-- If a feature is assumed but not confirmed, prompt the user for clarification before including it.
-- If you are working on a VS Code extension, use the VS Code API tool with a query to find relevant VS Code API references and samples related to that query.
+## Code Style
+- Use TypeScript strict mode
+- Prefer async/await over promises
+- Use Prisma for all database queries
+- Keep components focused and reusable
+- Document complex functions with JSDoc
+- Use semantic HTML and ARIA labels
 
-TASK COMPLETION RULES:
-- Your task is complete when:
-  - Project is successfully scaffolded and compiled without errors
-  - copilot-instructions.md file in the .github directory exists in the project
-  - README.md file exists and is up to date
-  - User is provided with clear instructions to debug/launch the project
-
-Before starting a new task in the above plan, update progress in the plan.
--->
-- Work through each checklist item systematically.
-- Keep communication concise and focused.
-- Follow development best practices.

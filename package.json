@@ -11,7 +11,12 @@
     "import:firebase": "node scripts/importFirebase.js",
     "import:scryfall": "npx tsx scripts/import-scryfall.ts",
     "import:mtgjson": "npx tsx scripts/import-mtgjson.ts",
-    "import:mtgjson:full": "npx tsx scripts/import-mtgjson-comprehensive.ts"
+    "import:mtgjson:full": "npx tsx scripts/import-mtgjson-comprehensive.ts",
+    "import:edhrec:synergies": "npx tsx scripts/import-edhrec-synergies.ts",
+    "import:mtgtop8": "npx tsx scripts/import-mtgtop8-decks.ts",
+    "import:moxfield": "npx tsx scripts/import-moxfield-decks.ts",
+    "scheduler": "npx tsx scripts/scheduler.ts",
+    "scrape:now": "npx tsx scripts/scrape-now.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -20,6 +25,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@types/node-schedule": "^2.1.8",
     "bcryptjs": "^3.0.2",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
@@ -28,6 +34,7 @@
     "lucide-react": "^0.544.0",
     "next": "15.5.4",
     "next-auth": "^4.24.11",
+    "node-schedule": "^2.1.1",
     "nodemailer": "^6.10.1",
     "papaparse": "^5.5.3",
     "react": "19.1.0",
