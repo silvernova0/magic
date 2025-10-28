@@ -1,0 +1,27 @@
+# Core training dependencies (install PyTorch separately per your CUDA/driver configuration)
+transformers==4.57.1
+accelerate==1.11.0
+peft==0.17.1
+datasets==4.3.0
+tqdm==4.67.1
+huggingface-hub==0.36.0
+safetensors==0.6.2
+tokenizers==0.22.1
+trl==0.8.0
+# Optional (only for QLoRA / 4-bit quant): bitsandbytes (install with CUDA-enabled wheel)
+# bitsandbytes==0.41.0
+# Intel XPU extension (only if training on Intel Arc and ipex installed)
+# intel-extension-for-pytorch
+
+# NOTE: Do NOT include torch in this file unless you want the default CPU wheel.
+# Install PyTorch separately depending on your GPU and CUDA driver.
+# Examples:
+#  - CUDA 12.4 (works with driver supporting CUDA 13):
+#    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+#  - Nightly (if you need bleeding-edge GPU arch support — e.g., Blackwell/sm_120):
+#    pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu124
+#  - CPU-only install:
+#    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# After installing PyTorch, install the rest with:
+# pip install -r requirements.txt
