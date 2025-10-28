@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MOXFIELD_BRACKETS, DECK_THEMES, MTG_COLORS } from '@/lib/constants';
+import { MOXFIELD_BRACKETS, DECK_THEMES, MTG_COLORS, KINDRED_TYPES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,6 +24,7 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
   const [commander, setCommander] = useState('');
   const [commanderSuggestions, setCommanderSuggestions] = useState<string[]>([]);
   const [theme, setTheme] = useState('Aggro');
+  const [kindredType, setKindredType] = useState('Elves');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [powerLevel, setPowerLevel] = useState('3');
   const [useCollectionOnly, setUseCollectionOnly] = useState(false);
@@ -116,9 +117,13 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
       alert('Please import your collection first or uncheck "Build from my collection only"');
       return;
     }
+    
+    // If Kindred theme, append the creature type to the theme
+    const finalTheme = theme === 'Kindred' ? `Kindred - ${kindredType}` : theme;
+    
     onSubmit({
       commander,
-      theme,
+      theme: finalTheme,
       colors: selectedColors,
       powerLevel,
       useCollectionOnly,
@@ -135,37 +140,43 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
             Configure your Commander deck with AI assistance using data from EDHREC, MTGTop8, and Moxfield
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 overflow-visible">
           {/* Commander */}
           <div className="space-y-2 relative">
             <Label htmlFor="commander">Commander (Optional)</Label>
-            <Input
-              id="commander"
-              value={commander}
-              onChange={(e) => setCommander(e.target.value)}
-              placeholder="e.g., Atraxa, Praetors' Voice (leave empty for AI suggestion)"
-              disabled={isLoading}
-              autoComplete="off"
-            />
-            
-            {/* Commander Suggestions Dropdown */}
-            {commanderSuggestions.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-card border-2 border-primary/50 rounded-md shadow-2xl max-h-60 overflow-y-auto">
-                {commanderSuggestions.map((suggestion, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setCommander(suggestion);
-                      setCommanderSuggestions([]);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-accent hover:text-accent-foreground transition-colors border-b border-border last:border-b-0"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="relative">
+              <Input
+                id="commander"
+                value={commander}
+                onChange={(e) => setCommander(e.target.value)}
+                placeholder="e.g., Atraxa, Praetors' Voice (leave empty for AI suggestion)"
+                disabled={isLoading}
+                autoComplete="off"
+              />
+              
+              {/* Commander Suggestions Dropdown */}
+              {commanderSuggestions.length > 0 && (
+                <div 
+                  className="absolute z-50 w-full mt-1 bg-card border border-border rounded-md shadow-lg max-h-60 overflow-y-auto"
+                  style={{ top: '100%', left: 0 }}
+                >
+                  {commanderSuggestions.map((suggestion, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setCommander(suggestion);
+                        setCommanderSuggestions([]);
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-accent transition-colors border-b border-border last:border-b-0"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             
             <p className="text-xs text-muted-foreground">
               Leave empty to let AI suggest the best commander for your theme and colors
@@ -192,6 +203,29 @@ const DeckBuilderForm: React.FC<DeckBuilderFormProps> = ({ onSubmit, isLoading }
               Choose the primary strategy for your deck
             </p>
           </div>
+
+          {/* Kindred Type - Only shown when Kindred theme is selected */}
+          {theme === 'Kindred' && (
+            <div className="space-y-2">
+              <Label htmlFor="kindredType">Creature Type</Label>
+              <select
+                id="kindredType"
+                value={kindredType}
+                onChange={(e) => setKindredType(e.target.value)}
+                className="w-full bg-background border border-input rounded-md p-2"
+                disabled={isLoading}
+              >
+                {KINDRED_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Choose the creature type for your tribal deck
+              </p>
+            </div>
+          )}
 
           {/* Color Identity */}
           <div className="space-y-2">

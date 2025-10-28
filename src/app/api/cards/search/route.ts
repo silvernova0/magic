@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
     
     if (query) {
       where.OR = [
-        { name: { contains: query, mode: 'insensitive' } },
-        { oracleText: { contains: query, mode: 'insensitive' } },
-        { typeLine: { contains: query, mode: 'insensitive' } },
+        { name: { contains: query } },
+        { oracleText: { contains: query } },
+        { typeLine: { contains: query } },
       ];
     }
     
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       where.AND = [
         ...(where.AND || []),
         ...types.map(type => ({
-          typeLine: { contains: type, mode: 'insensitive' }
+          typeLine: { contains: type }
         }))
       ];
     }
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       where.AND = [
         ...(where.AND || []),
         ...keywords.map(keyword => ({
-          keywords: { contains: keyword, mode: 'insensitive' }
+          keywords: { contains: keyword }
         }))
       ];
     }

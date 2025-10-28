@@ -21,11 +21,6 @@ const nextConfig = {
     unoptimized: process.env.NODE_ENV === 'production',
   },
   
-  // Disable telemetry
-  telemetry: {
-    disabled: true,
-  },
-  
   // Security headers
   async headers() {
     return [

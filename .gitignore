@@ -48,3 +48,7 @@ next-env.d.ts
 /data/mtgjson/*.json
 /data/mtgjson/AllDeckFiles/
 /data/mtgjson/AllSetFiles/
+
+# AI models
+/models/
+
