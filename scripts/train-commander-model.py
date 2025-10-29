@@ -409,7 +409,7 @@ def main():
         save_strategy="steps",
         load_best_model_at_end=False,
         gradient_checkpointing=True,  # Enable gradient checkpointing to save RAM
-        optim="adamw_torch",  # Use PyTorch's AdamW (more memory efficient)
+        optim="adamw_torch_xpu",  # Use IPEX optimized AdamW for XPU
         dataloader_pin_memory=False  # Disable pin memory to save RAM
     )
     
@@ -429,8 +429,8 @@ def main():
     logger.info(f"  Mixed precision: BF16={use_bf16}, FP16={use_fp16}")
     logger.info("")
     
-    # Use default data collator (simpler, works better with XPU)
-    data_collator = default_data_collator
+    # Use DataCollatorForLanguageModeling for dynamic padding
+    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
     
     # Initialize trainer
     logger.info("Initializing trainer...")

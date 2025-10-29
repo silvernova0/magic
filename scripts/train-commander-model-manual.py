@@ -241,7 +241,7 @@ def main():
     dataloader = DataLoader(
         tokenized_data,
         batch_size=BATCH_SIZE,
-        shuffle=False,  # Don't shuffle - saves CPU time
+        shuffle=True,  # Shuffle data for better model generalization
         collate_fn=collate_fn,
         num_workers=0,  # XPU works better with single worker for now
         pin_memory=False  # Not supported well with XPU
@@ -344,6 +344,7 @@ def main():
                 labels = batch['labels'].to(device, non_blocking=True)
                 
                 # Forward pass
+                print(f"Processing batch {batch_idx}")
                 outputs = model(
                     input_ids=input_ids,
                     attention_mask=attention_mask,
@@ -358,10 +359,6 @@ def main():
                 
                 # Update weights
                 if (batch_idx + 1) % GRADIENT_ACCUMULATION_STEPS == 0:
-                    # Synchronize only when we're about to update weights
-                    if device == "xpu":
-                        torch.xpu.synchronize()
-                    
                     optimizer.step()
                     scheduler.step()
                     optimizer.zero_grad()
