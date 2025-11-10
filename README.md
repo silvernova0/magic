@@ -16,10 +16,12 @@ An AI-powered Commander/EDH deck builder with intelligent strategy-based card se
 ### 🎴 Deck Configuration
 - **8 Strategy Archetypes** - Mill, Graveyard, Voltron, Combo, Tokens, Control, Tribal, Generic
 - **Color Filtering** - Build within specific colors that intersect with commander identity
-- **Power Level Brackets** - 1 (Precon) to 5 (cEDH) with randomized land counts for brackets 1-3
+- **Power Level Brackets** - 1 (Precon) to 5 (cEDH) with optimized land counts
 - **Collection Mode** - Build from owned cards only OR use entire database
 - **Commander Selection** - Specify commander or use "Surprise Me!" for AI suggestions
-- **Land Randomization** - Brackets 1-3 get 35-40 lands randomly, Brackets 4-5 get consistent 35
+- **Adaptive Land Counts**:
+  - Brackets 1-3: 35-40 lands (randomized for variety)
+  - Brackets 4-5: 28-32 lands (optimized for high-power/cEDH)
 
 ### 👥 User Features
 - **Authentication** - Secure login/registration with NextAuth.js + bcrypt
@@ -211,7 +213,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser.
 
 4. **Review Generated Deck:**
    - 100 cards total (99 + commander OR 98 + 2 commanders)
-   - Lands: 35-40 (randomized for brackets 1-3), 35 (fixed for brackets 4-5)
+   - Adaptive land counts:
+     - Brackets 1-3: 35-40 lands (randomized for casual/mid-power variety)
+     - Brackets 4-5: 28-32 lands (randomized for optimized high-power/cEDH)
    - Strategy cards: Mill effects, lifegain, removal, ramp, card draw, etc.
    - Organized by card type with quantities
 

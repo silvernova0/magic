@@ -85,13 +85,16 @@ export async function POST(req: NextRequest) {
     
     const hasColors = commanderCard?.colorIdentity && commanderCard.colorIdentity !== '';
     
-    // Randomize land count for brackets 1-3 (casual to mid-power)
-    // Higher brackets get consistent 35 lands for optimization
-    let landCount = 35;
+    // Randomize land count based on power level
+    // Brackets 1-3 (casual to mid-power): 35-40 lands
+    // Brackets 4-5 (high-power to cEDH): 28-32 lands (more optimized mana bases)
+    let landCount: number;
     if (bracket <= 3) {
-      // Random between 35-40 lands for lower power/casual decks
-      landCount = 35 + Math.floor(Math.random() * 6); // 35, 36, 37, 38, 39, or 40
-      console.log(`🎲 Randomized land count for bracket ${bracket}: ${landCount} lands`);
+      landCount = 35 + Math.floor(Math.random() * 6); // 35-40 lands
+      console.log(`🎲 Randomized land count for bracket ${bracket}: ${landCount} lands (casual/mid-power)`);
+    } else {
+      landCount = 28 + Math.floor(Math.random() * 5); // 28-32 lands
+      console.log(`🎲 Randomized land count for bracket ${bracket}: ${landCount} lands (high-power/cEDH)`);
     }
     
     // Base card selection (will be customized per strategy)
