@@ -43,9 +43,10 @@ export async function POST(req: NextRequest) {
 
     const { commander, strategy, powerLevel, bracket, useCollectionOnly, avoidSaltCards, colors } = await req.json() as BuildRequest;
 
-    if (!commander || !strategy || !powerLevel || !bracket) {
+    // Validate required fields (commander is optional)
+    if (!strategy || !powerLevel || !bracket) {
       return NextResponse.json({ 
-        error: 'Missing required fields: commander, strategy, powerLevel, bracket' 
+        error: 'Missing required fields: strategy, powerLevel, bracket' 
       }, { status: 400 });
     }
 
@@ -77,9 +78,65 @@ export async function POST(req: NextRequest) {
     // Build strategy-specific card selection based on deck theme
     const strategyLower = strategy.toLowerCase();
     
+    // If no commander specified, pick one that matches colors and strategy
+    let finalCommander = commander;
+    if (!finalCommander || finalCommander.trim() === '') {
+      console.log('🎯 No commander specified, selecting one that matches criteria...');
+      
+      // Build color identity filter based on selected colors
+      const colorIdentity = colors && colors.length > 0 
+        ? colors.sort().join(',')
+        : ''; // Colorless if no colors selected
+      
+      // Find a commander that matches the colors and has good EDHREC rank
+      const whereClause: any = {
+        isCommander: true,
+      };
+      
+      if (colorIdentity) {
+        whereClause.colorIdentity = colorIdentity;
+      }
+      
+      // Try to find commander with strategy in name/oracle text
+      let candidateCommanders = await prisma.card.findMany({
+        where: {
+          ...whereClause,
+          OR: [
+            { name: { contains: strategyLower, mode: 'insensitive' } },
+            { oracleText: { contains: strategyLower, mode: 'insensitive' } },
+          ],
+        },
+        orderBy: {
+          edhrecRank: 'asc', // Most popular first
+        },
+        take: 10,
+      });
+      
+      // If no matches with strategy, just get popular commanders with matching colors
+      if (candidateCommanders.length === 0) {
+        candidateCommanders = await prisma.card.findMany({
+          where: whereClause,
+          orderBy: {
+            edhrecRank: 'asc',
+          },
+          take: 10,
+        });
+      }
+      
+      if (candidateCommanders.length === 0) {
+        return NextResponse.json({ 
+          error: `No commanders found matching color identity: ${colors?.join(', ') || 'colorless'}` 
+        }, { status: 400 });
+      }
+      
+      // Pick a random one from top candidates
+      finalCommander = candidateCommanders[Math.floor(Math.random() * candidateCommanders.length)].name;
+      console.log(`✅ Selected commander: ${finalCommander}`);
+    }
+    
     // Get commander's color identity to determine which staples to include
     const commanderCard = await prisma.card.findFirst({
-      where: { name: commander },
+      where: { name: finalCommander },
       select: { colorIdentity: true }
     });
     
@@ -275,7 +332,7 @@ export async function POST(req: NextRequest) {
       // Tribal strategy: creature type synergies
       // Get commander's creature types to filter for tribal synergies
       const commanderTypes = await prisma.card.findFirst({
-        where: { name: commander },
+        where: { name: finalCommander },
         select: { typeLine: true }
       });
       
@@ -283,7 +340,7 @@ export async function POST(req: NextRequest) {
       const subtypes = commanderTypes?.typeLine?.split('—')[1]?.trim().split(' ') || [];
       const mainType = subtypes[0]; // Usually the tribe (e.g., "Sliver", "Elf", "Dragon")
       
-      console.log(`🎴 Tribal deck for ${commander}, tribe: ${mainType || 'unknown'}`);
+      console.log(`🎴 Tribal deck for ${finalCommander}, tribe: ${mainType || 'unknown'}`);
       
       // For bracket 1-2: 90% creatures should be on-tribe
       // For bracket 3+: 70% creatures should be on-tribe
@@ -378,11 +435,11 @@ export async function POST(req: NextRequest) {
 
     // Get popular cards for this commander from EDHREC data
     // This acts as "AI suggestions" based on what other players use
-    const popularCards = await getTopEDHRECCards(commander, 30);
-    console.log(`Retrieved ${popularCards.length} popular cards for ${commander} from EDHREC`);
+    const popularCards = await getTopEDHRECCards(finalCommander, 30);
+    console.log(`Retrieved ${popularCards.length} popular cards for ${finalCommander} from EDHREC`);
 
     const v3Structure = {
-      commander,
+      commander: finalCommander,
       strategy,
       bracket,
       power_level: powerLevel,
@@ -421,7 +478,7 @@ export async function POST(req: NextRequest) {
     // Save deck to database
     const newDeck = await prisma.deck.create({
       data: {
-        name: `${commander} - ${strategy}`,
+        name: `${finalCommander} - ${strategy}`,
         description: `Power Level ${powerLevel}, Bracket ${bracket}`,
         theme: strategy,
         powerLevel: `Bracket ${bracket}`,
