@@ -98,12 +98,13 @@ export async function POST(req: NextRequest) {
       }
       
       // Try to find commander with strategy in name/oracle text
+      // Note: SQLite's LIKE is case-insensitive by default, no mode option needed
       let candidateCommanders = await prisma.card.findMany({
         where: {
           ...whereClause,
           OR: [
-            { name: { contains: strategyLower, mode: 'insensitive' } },
-            { oracleText: { contains: strategyLower, mode: 'insensitive' } },
+            { name: { contains: strategyLower } },
+            { oracleText: { contains: strategyLower } },
           ],
         },
         orderBy: {
