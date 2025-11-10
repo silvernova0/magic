@@ -102,7 +102,9 @@ export async function POST(req: NextRequest) {
     let cardSelection: any = {
       lands: {
         count: landCount,
-        filters: [{ types: ["Land"] }]
+        filters: bracket <= 2 
+          ? [{ types: ["Land"], edhrec_rank_min: 1000 }]  // Budget lands: avoid popular/expensive ones
+          : [{ types: ["Land"] }]  // Any lands for brackets 3-5
       },
       staples: {
         count: hasColors ? 3 : 1,  // Sol Ring + Arcane Signet + Command Tower (if colored)
@@ -112,7 +114,9 @@ export async function POST(req: NextRequest) {
       },
       ramp: {
         count: hasColors ? 9 : 11,  // Reduced to account for Arcane Signet
-        filters: [{ tags: ["ramp"], types_exclude: ["Land"] }]
+        filters: bracket <= 2
+          ? [{ tags: ["ramp"], types_exclude: ["Land"], rarity_not: ["mythic"] }]  // No mythic ramp for budget
+          : [{ tags: ["ramp"], types_exclude: ["Land"] }]
       }
     };
 
@@ -268,24 +272,61 @@ export async function POST(req: NextRequest) {
         }
       };
     } else if (strategyLower.includes('tribal')) {
-      // Tribal strategy: creature type synergies (commander's type will be in EDHREC cards)
+      // Tribal strategy: creature type synergies
+      // Get commander's creature types to filter for tribal synergies
+      const commanderTypes = await prisma.card.findFirst({
+        where: { name: commander },
+        select: { typeLine: true }
+      });
+      
+      // Extract creature subtypes (e.g., "Legendary Creature — Sliver" -> ["Sliver"])
+      const subtypes = commanderTypes?.typeLine?.split('—')[1]?.trim().split(' ') || [];
+      const mainType = subtypes[0]; // Usually the tribe (e.g., "Sliver", "Elf", "Dragon")
+      
+      console.log(`🎴 Tribal deck for ${commander}, tribe: ${mainType || 'unknown'}`);
+      
+      // For bracket 1-2: 90% creatures should be on-tribe
+      // For bracket 3+: 70% creatures should be on-tribe
+      const onTribeCount = bracket <= 2 ? 32 : 25;
+      const offTribeCount = bracket <= 2 ? 3 : 10;
+      
       cardSelection = {
         ...cardSelection,
-        creatures: {
-          count: 35,
+        tribal_creatures: mainType ? {
+          count: onTribeCount,
+          filters: [{ 
+            types: ["Creature"], 
+            subtypes: [mainType],
+            rarity_not: bracket <= 2 ? ["mythic"] : undefined  // No mythics in budget tribal
+          }]
+        } : {
+          count: onTribeCount,
+          filters: [{ types: ["Creature"] }]
+        },
+        support_creatures: {
+          count: offTribeCount,
           filters: [{ types: ["Creature"] }]
         },
         tribal_support: {
           count: 8,
-          filters: [{ oracle_text_includes: ["of the chosen type", "creature type", "share a creature type"] }]
+          filters: [{ 
+            oracle_text_includes: ["of the chosen type", "creature type", "share a creature type"],
+            rarity_not: bracket <= 2 ? ["mythic"] : undefined
+          }]
         },
         card_draw: {
-          count: 8,
-          filters: [{ tags: ["card_draw"] }]
+          count: 6,
+          filters: [{ 
+            tags: ["card_draw"],
+            rarity_not: bracket <= 2 ? ["mythic"] : undefined
+          }]
         },
         removal: {
-          count: 6,
-          filters: [{ tags: ["removal"] }]
+          count: 5,
+          filters: [{ 
+            tags: ["removal"],
+            rarity_not: bracket <= 2 ? ["mythic"] : undefined
+          }]
         }
       };
     } else {

@@ -233,6 +233,25 @@ class DeckBuilder:
                 filter_conditions.append("cmc >= ?")
                 params.append(filter_obj['cmc_min'])
             
+            # EDHREC rank filtering (lower rank = more popular/expensive)
+            if 'edhrec_rank_min' in filter_obj:
+                # NULL ranks are treated as 99999 (unpopular cards)
+                filter_conditions.append("(edhrecRank IS NULL OR edhrecRank >= ?)")
+                params.append(filter_obj['edhrec_rank_min'])
+            
+            if 'edhrec_rank_max' in filter_obj:
+                filter_conditions.append("edhrecRank <= ?")
+                params.append(filter_obj['edhrec_rank_max'])
+            
+            # Rarity filtering
+            if 'rarity_not' in filter_obj:
+                rarity_conditions = []
+                for rarity in filter_obj['rarity_not']:
+                    rarity_conditions.append("rarity != ?")
+                    params.append(rarity)
+                if rarity_conditions:
+                    filter_conditions.append(f"({' AND '.join(rarity_conditions)})")
+            
             # Color identity filtering
             if 'colors_within' in filter_obj:
                 allowed_colors = filter_obj['colors_within']
