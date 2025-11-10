@@ -1,0 +1,9 @@
+{
+  "global_step": 3880,
+  "max_steps": 3886,
+  "epoch": 2.995850622406639,
+  "loss": 0.06264536827802658,
+  "learning_rate": 3.169572107765452e-07,
+  "last_update": "2025-11-08T13:36:04.227206",
+  "progress_percent": 99.85
+}

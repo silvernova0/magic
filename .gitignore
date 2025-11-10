@@ -1,0 +1,103 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+
+# Production
+dist/
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files (IMPORTANT: Contains SMTP passwords and secrets)
+.env
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.virtualenv
+
+# Database files (39MB - too large for git)
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# AI Models (multi-GB files)
+models/qwen2.5-3b/
+models/llama-3.1-8b/
+models/llama-3.2-3b/
+models/commander-qwen-3b-v3/
+models/commander-llama-lora/
+models/*/checkpoint-*/
+models/*/checkpoints/
+models/*/*.safetensors
+models/*/*.bin
+models/*/*.pth
+models/*/tokenizer.json
+*.gguf
+*.safetensors
+*.bin
+training_state.pt
+
+# Training data (large JSONL files)
+data/mtgjson/AllPrintings.json
+data/mtgjson/AllIdentifiers.json
+data/mtgjson/Legacy.json
+data/mtgjson/AtomicCards.json
+data/training/*.jsonl
+data/training/*.jsonl.backup
+data/training/combined_*.jsonl
+data/training/v3_*.jsonl
+data/CommanderPrecons/
+data/.hf_cache/
+
+# Generated decks
+generated_decks/
+
+# Logs
+*.log
+nohup.out
+training_*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Artifacts (build artifacts from documentation)
+artifacts/

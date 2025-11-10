@@ -1,0 +1,151 @@
+# Moxfield Commander Themes
+# Extracted 2025-11-05
+# Note: Themes with (WUBRG) etc. indicate color combinations
+# W=White, U=Blue, B=Black, R=Red, G=Green
+
+# Strategy Themes (Most relevant for Commander)
++1/+1 Counters
+-1/-1 Counters
+Aggro
+Aikido
+Altruism (WURG)
+Attractions
+Auras
+Battlecruiser
+Birthing Pod / Pod
+Blink / Flicker
+Burn
+Cascade
+Casual
+cEDH
+Chaos
+Clones
+Coin Flips
+Combo
+Competitive
+Control
+Cycling
+Death & Taxes
+Defender
+Devotion
+Discard
+Discover
+Donation
+Dredge
+Dungeons
+Eggs
+Enchantments
+Energy
+Equipment
+Extra Combats
+Extra Turns
+Farm
+Flying
+Formula X-1
+Goad
+Goodstuff
+Group Hug
+Group Slug
+Hatebears
+Help Wanted
+Historic
+Infect
+Jank
+Kindred
+Land Destruction
+Lands Matter
+Legends Matter
+Life Bargain
+Life Gain
+Midrange
+Mill
+Miracles
+Modified
+Modular
+Monarch
+Morph
+Mutate
+Pillowfort
+PlayEDH - Battlecruiser
+PlayEDH - High
+PlayEDH - Low
+PlayEDH - Maximum
+PlayEDH - Mid
+Poison
+Primer
+Prison
+Ramp
+Reanimator
+Rock
+Rule Zero
+Snow
+Spellslinger
+Stax
+Storm
+Super Friends
+Tempo
+Thieves
+Tokens
+Toolbox
+Tron
+Turbo
+Unmaintained
+Vehicles
+Voltron
+Vorthos
+Webcam Friendly
+Wheels
+X Spells
+Zoo
+
+# Tribal Themes
+Tribal
+Dragons
+Angels
+Elves
+Goblins
+Zombies
+Vampires
+Merfolk
+Humans
+Soldiers
+Wizards
+
+# Color Combination Themes (Less useful - duplicate bracket filtering)
+Abzan(WBG)
+Azorius(WU)
+Bant(GWU)
+Boros(RW)
+Dimir (UB)
+Esper (WUB)
+Golgari (BG)
+Grixis(UBR)
+Gruul(RG)
+Izzet(UR)
+Jeskai(URW)
+Jund(BR)
+Mardu(RWB)
+Naya(RGW)
+Orzhov(WB)
+Rakdos(BR)
+Selesnya(GW)
+Simic (GU)
+Sultai (BGU)
+Temur(GUR)
+Mono Black
+Mono Blue
+Mono Green
+Mono Red
+Mono White
+Five Color(WUBRG)
+Colorless
+
+# Format-Specific (Non-Commander)
+Affinity
+Blue Moon
+Delver
+Maverick
+Stoneblade
+
+# Budget/Meta Tags (Not strategy themes)
+Budget

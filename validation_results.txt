@@ -1,0 +1,20 @@
+`torch_dtype` is deprecated! Use `dtype` instead!
+
+============================================================
+COMMANDER DECK GENERATOR WITH CARD VALIDATION
+============================================================
+
+Initializing card validator...
+Loading card database from data/mtgjson/AtomicCards.json...
+✓ Loaded 32,735 valid card names
+
+Loading model...
+Loading base model from models/qwen2.5-3b...
+Loading checkpoint shards:   0%|          | 0/3 [00:00<?, ?it/s]Loading checkpoint shards:  33%|███▎      | 1/3 [00:00<00:01,  1.46it/s]Loading checkpoint shards:  67%|██████▋   | 2/3 [00:01<00:00,  1.43it/s]Loading checkpoint shards: 100%|██████████| 3/3 [00:01<00:00,  1.85it/s]Loading checkpoint shards: 100%|██████████| 3/3 [00:01<00:00,  1.72it/s]
+[W1108 16:18:48.871462342 OperatorEntry.cpp:218] Warning: Warning only once for all operators,  other operators may also be overridden.
+  Overriding a previously registered kernel for the same operator and the same dispatch key
+  operator: aten::geometric_(Tensor(a!) self, float p, *, Generator? generator=None) -> Tensor(a!)
+    registered at /pytorch/build/aten/src/ATen/RegisterSchema.cpp:6
+  dispatch key: XPU
+  previous kernel: registered at /pytorch/aten/src/ATen/VmapModeRegistrations.cpp:37
+       new kernel: registered at /build/intel-pytorch-extension/build/Release/csrc/gpu/csrc/gpu/xpu/ATen/RegisterXPU_0.cpp:172 (function operator())

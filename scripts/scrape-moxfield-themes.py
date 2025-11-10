@@ -1,0 +1,468 @@
+#!/usr/bin/env python3
+"""
+Scrape diverse Commander decks from Moxfield using theme + bracket filters.
+Targets specific strategy themes across power levels for maximum training diversity.
+"""
+
+import json
+import time
+import requests
+from pathlib import Path
+from datetime import datetime
+
+# Priority themes for Commander training data
+# Organized by strategic diversity, excluding color-only and non-Commander themes
+PRIORITY_THEMES = [
+    # Core strategies (high diversity)
+    'Kindred',  # Note: Moxfield uses "Kindred" not "Tribal"
+    'Combo',
+    'Control',
+    'Aggro',
+    'Midrange',
+    'Voltron',
+    'Tokens',
+    'Reanimator',
+    'Spellslinger',
+    'Ramp',
+    
+    # Tactical approaches
+    'Stax',
+    'Group Hug',
+    'Group Slug',
+    'Pillowfort',
+    'Aristocrats',
+    'Goodstuff',
+    
+    # Mechanical themes
+    '+1/+1 Counters',
+    'Enchantments',
+    'Equipment',
+    'Lands Matter',
+    'Graveyard',
+    'Artifacts',
+    'Blink / Flicker',
+    'Sacrifice',
+    
+    # Specific strategies
+    'Super Friends',
+    'Storm',
+    'Infect',
+    'Mill',
+    'Wheels',
+    'Extra Turns',
+    'Extra Combats',
+    'Life Gain',
+    'Cascade',
+    'Cycling',
+    
+    # Meta/Power labels
+    'cEDH',
+    'Competitive',
+    'Casual',
+    'Battlecruiser',
+    'Primer',
+]
+
+# Bracket distribution targets
+# Expansion: Increase from 200 to 300 decks per theme
+# Target: ~6,000 additional decks (10,000+ total with existing 4,161)
+BRACKET_TARGETS = {
+    '1': 70,   # Precon power (+20)
+    '2': 80,   # Casual optimized (+20)
+    '3': 70,   # Optimized (+20)
+    '4': 50,   # High power (+20)
+    '5': 30,   # cEDH (+20)
+}
+
+
+class MoxfieldThemeScraper:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'application/json'
+        })
+        self.output_file = Path('data/training/moxfield_decks.jsonl')
+        self.scraped_ids = self.load_existing_ids()
+        
+    def load_existing_ids(self):
+        """Load already-scraped deck IDs to avoid duplicates."""
+        if not self.output_file.exists():
+            return set()
+        
+        ids = set()
+        with open(self.output_file, 'r') as f:
+            for line in f:
+                try:
+                    deck = json.loads(line)
+                    if 'publicId' in deck.get('metadata', {}):
+                        ids.add(deck['metadata']['publicId'])
+                except:
+                    continue
+        return ids
+    
+    def search_decks(self, theme, bracket, page_size=32, max_decks=None, sort_by='views', max_pages=100):
+        """
+        Search for Commander decks by theme and bracket.
+        
+        Args:
+            theme: Strategy theme (e.g., 'Combo', 'Tribal', 'Control')
+            bracket: Power bracket 1-5
+            page_size: Results per page (max 32)
+            max_decks: Maximum decks to collect
+            sort_by: Sort order ('views', 'updated', 'created')
+            max_pages: Maximum pages to search (default 100)
+        """
+        if max_decks is None:
+            max_decks = BRACKET_TARGETS.get(str(bracket), 50)
+        
+        url = 'https://api2.moxfield.com/v2/decks/search'
+        decks = []
+        page = 1
+        
+        print(f"\nScraping: {theme} @ Bracket {bracket} (target: {max_decks} decks, sort: {sort_by}, max pages: {max_pages})")
+        
+        while len(decks) < max_decks and page <= max_pages:
+            params = {
+                'pageNumber': page,
+                'pageSize': page_size,
+                'sortType': sort_by,  # 'views' = most popular, 'likes' = most liked
+                'sortDirection': 'Descending',
+                'fmt': 'commander',
+                'hub': theme,
+                'bracketSetting': 'equals',
+                'bracket': str(bracket)
+            }
+            
+            try:
+                response = self.session.get(url, params=params, timeout=15)
+                
+                if response.status_code != 200:
+                    print(f"  Error {response.status_code} on page {page}")
+                    break
+                
+                data = response.json()
+                page_decks = data.get('data', [])
+                
+                if not page_decks:
+                    print(f"  No more decks found (page {page})")
+                    break
+                
+                # Filter out already-scraped decks
+                new_decks = [d for d in page_decks if d.get('publicId') not in self.scraped_ids]
+                decks.extend(new_decks)
+                
+                print(f"  Page {page}/{max_pages}: {len(new_decks)}/{len(page_decks)} new decks (total: {len(decks)})")
+                
+                # Add to scraped set
+                for deck in new_decks:
+                    if deck.get('publicId'):
+                        self.scraped_ids.add(deck['publicId'])
+                
+                if len(decks) >= max_decks:
+                    break
+                
+                page += 1
+                time.sleep(0.5)  # Rate limiting
+                
+            except Exception as e:
+                print(f"  Exception on page {page}: {e}")
+                break
+        
+        if page > max_pages and len(decks) < max_decks:
+            print(f"  Reached max pages ({max_pages}), collected {len(decks)}/{max_decks} decks")
+        
+        return decks[:max_decks]
+    
+    def get_deck_details(self, public_id):
+        """Fetch full deck details including mainboard."""
+        url = f'https://api2.moxfield.com/v3/decks/all/{public_id}'
+        
+        try:
+            response = self.session.get(url, timeout=10)
+            if response.status_code == 200:
+                return response.json()
+        except Exception as e:
+            print(f"    Error fetching {public_id}: {e}")
+        
+        return None
+    
+    def format_deck_training_data(self, deck_summary, deck_details, theme, bracket):
+        """Convert deck data to training format."""
+        # Extract commander(s) from boards.commanders in deck_details
+        commanders = []
+        commander_board = deck_details.get('boards', {}).get('commanders', {}).get('cards', {})
+        for card_id, card_data in commander_board.items():
+            card = card_data.get('card', {})
+            if card.get('name'):
+                commanders.append(card['name'])
+        
+        if not commanders:
+            return None
+        
+        commander_text = ' & '.join(commanders) if len(commanders) > 1 else commanders[0]
+        
+        # Extract colors
+        colors = deck_summary.get('colors', [])
+        color_identity = ''.join(sorted(colors)) if colors else 'C'
+        
+        # Build mainboard list
+        mainboard = deck_details.get('boards', {}).get('mainboard', {}).get('cards', {})
+        if not mainboard:
+            return None
+        
+        # Validate card count (should be exactly 100 total)
+        # 1 commander = 99 mainboard + 1 commander = 100
+        # 2 commanders = 98 mainboard + 2 commanders = 100
+        total_mainboard = sum(card_data.get('quantity', 1) for card_data in mainboard.values())
+        total_commanders = len(commanders)
+        total_cards = total_mainboard + total_commanders
+        
+        # Expected mainboard should be 100 - number of commanders
+        expected_mainboard = 100 - total_commanders
+        
+        if total_cards != 100:
+            print(f"    SKIP: Invalid card count ({total_cards} cards, expected 100)")
+            return None
+        
+        if total_mainboard != expected_mainboard:
+            print(f"    SKIP: Invalid mainboard count ({total_mainboard} cards, expected {expected_mainboard} for {total_commanders} commander(s))")
+            return None
+        
+        decklist_lines = []
+        
+        # Add commander(s) first
+        commander_board = deck_details.get('boards', {}).get('commanders', {}).get('cards', {})
+        if commander_board:
+            decklist_lines.append("Commanders:")
+            for i, (card_id, card_data) in enumerate(commander_board.items(), 1):
+                card = card_data.get('card', {})
+                name = card.get('name', 'Unknown')
+                decklist_lines.append(f"Commander ({i}): {name}")
+            decklist_lines.append("")
+        
+        # Group by card type for better organization
+        creatures = []
+        instants_sorceries = []
+        enchantments = []
+        artifacts = []
+        planeswalkers = []
+        lands = []
+        
+        for card_id, card_data in mainboard.items():
+            quantity = card_data.get('quantity', 1)
+            card = card_data.get('card', {})
+            name = card.get('name', 'Unknown')
+            type_line = card.get('type', '').lower()
+            
+            line = f"{quantity}x {name}"
+            
+            if 'creature' in type_line:
+                creatures.append(line)
+            elif 'instant' in type_line or 'sorcery' in type_line:
+                instants_sorceries.append(line)
+            elif 'enchantment' in type_line:
+                enchantments.append(line)
+            elif 'artifact' in type_line:
+                artifacts.append(line)
+            elif 'planeswalker' in type_line:
+                planeswalkers.append(line)
+            elif 'land' in type_line:
+                lands.append(line)
+            else:
+                # Unknown type, add to artifacts
+                artifacts.append(line)
+        
+        # Build organized decklist
+        if creatures:
+            decklist_lines.append("Creatures:")
+            decklist_lines.extend(creatures)
+            decklist_lines.append("")
+        
+        if instants_sorceries:
+            decklist_lines.append("Instants and Sorceries:")
+            decklist_lines.extend(instants_sorceries)
+            decklist_lines.append("")
+        
+        if enchantments:
+            decklist_lines.append("Enchantments:")
+            decklist_lines.extend(enchantments)
+            decklist_lines.append("")
+        
+        if artifacts:
+            decklist_lines.append("Artifacts:")
+            decklist_lines.extend(artifacts)
+            decklist_lines.append("")
+        
+        if planeswalkers:
+            decklist_lines.append("Planeswalkers:")
+            decklist_lines.extend(planeswalkers)
+            decklist_lines.append("")
+        
+        if lands:
+            decklist_lines.append("Lands:")
+            decklist_lines.extend(lands)
+        
+        decklist = '\n'.join(decklist_lines)
+        
+        # Create instruction prompt
+        deck_name = deck_summary.get('name', 'Commander Deck')
+        
+        instruction = f"""Build a Commander deck with {commander_text} as the commander. Focus on {theme.lower()} strategy.
+
+Commander: {commander_text}
+Strategy: {theme}
+Colors: {color_identity}
+Power Level: Bracket {bracket}
+
+Decklist:
+"""
+        
+        output = decklist
+        
+        # Calculate quality score based on views and likes
+        views = deck_summary.get('viewCount', 0)
+        likes = deck_summary.get('likeCount', 0)
+        comments = deck_summary.get('commentCount', 0)
+        
+        quality_score = (views * 0.5) + (likes * 3) + (comments * 2)
+        
+        return {
+            'instruction': instruction,
+            'output': output,
+            'metadata': {
+                'source': f'moxfield_{theme.lower().replace(" ", "_").replace("/", "_")}',
+                'deck_name': deck_name,
+                'commander': commander_text,
+                'colors': color_identity,
+                'theme': theme,
+                'bracket': bracket,
+                'quality_score': quality_score,
+                'views': views,
+                'likes': likes,
+                'publicId': deck_summary.get('publicId'),
+                'scraped_at': datetime.now().isoformat()
+            }
+        }
+    
+    def scrape_theme_bracket_combination(self, theme, bracket, target_decks):
+        """Scrape decks for a specific theme+bracket combination."""
+        print(f"\n{'='*60}")
+        print(f"Target: {theme} @ Bracket {bracket} ({target_decks} decks)")
+        print(f"{'='*60}")
+        
+        # Use mixed sorting for diversity AND quality
+        # 70% most viewed (proven quality), 30% most liked (community favorites)
+        views_target = int(target_decks * 0.7)
+        likes_target = target_decks - views_target
+        
+        deck_summaries = []
+        
+        # Get most viewed decks (highest quality/popularity)
+        if views_target > 0:
+            viewed_decks = self.search_decks(theme, bracket, max_decks=views_target, sort_by='views')
+            deck_summaries.extend(viewed_decks)
+        
+        # Get most liked decks (community favorites)
+        if likes_target > 0:
+            liked_decks = self.search_decks(theme, bracket, max_decks=likes_target, sort_by='likes')
+            deck_summaries.extend(liked_decks)
+        
+        if not deck_summaries:
+            print(f"  No decks found for {theme} @ Bracket {bracket}")
+            return 0
+        
+        print(f"\nFetching details for {len(deck_summaries)} decks...")
+        
+        saved_count = 0
+        
+        for i, deck_summary in enumerate(deck_summaries, 1):
+            public_id = deck_summary.get('publicId')
+            if not public_id:
+                continue
+            
+            print(f"  [{i}/{len(deck_summaries)}] Fetching {public_id}...", end=' ')
+            
+            # Get full deck details
+            deck_details = self.get_deck_details(public_id)
+            if not deck_details:
+                print("FAILED")
+                continue
+            
+            # Format training data
+            training_data = self.format_deck_training_data(
+                deck_summary, deck_details, theme, bracket
+            )
+            
+            if not training_data:
+                print("SKIP (no cards)")
+                continue
+            
+            # Save to file
+            with open(self.output_file, 'a') as f:
+                f.write(json.dumps(training_data) + '\n')
+            
+            saved_count += 1
+            print(f"SAVED (score: {training_data['metadata']['quality_score']:.0f})")
+            
+            time.sleep(0.3)  # Rate limiting
+        
+        print(f"\n✓ Saved {saved_count} decks for {theme} @ Bracket {bracket}")
+        return saved_count
+    
+    def run_full_scrape(self):
+        """Run comprehensive theme+bracket scraping."""
+        total_saved = 0
+        combinations_scraped = 0
+        
+        print("="*60)
+        print("MOXFIELD THEME+BRACKET SCRAPER")
+        print("="*60)
+        print(f"Output: {self.output_file}")
+        print(f"Existing decks: {len(self.scraped_ids)}")
+        print(f"Priority themes: {len(PRIORITY_THEMES)}")
+        print(f"Brackets: {list(BRACKET_TARGETS.keys())}")
+        print("="*60)
+        
+        # Scrape each theme across all brackets
+        for theme in PRIORITY_THEMES:
+            for bracket, target_decks in BRACKET_TARGETS.items():
+                try:
+                    saved = self.scrape_theme_bracket_combination(theme, bracket, target_decks)
+                    total_saved += saved
+                    combinations_scraped += 1
+                    
+                    # Progress update
+                    print(f"\n{'='*60}")
+                    print(f"PROGRESS: {combinations_scraped}/{len(PRIORITY_THEMES) * len(BRACKET_TARGETS)} combinations")
+                    print(f"Total decks saved: {total_saved}")
+                    print(f"{'='*60}\n")
+                    
+                    time.sleep(1)  # Pause between combinations
+                    
+                except KeyboardInterrupt:
+                    print("\n\nScraping interrupted by user")
+                    break
+                except Exception as e:
+                    print(f"\nError scraping {theme} @ Bracket {bracket}: {e}")
+                    continue
+            
+            # Check for interrupt between themes
+            try:
+                time.sleep(0.5)
+            except KeyboardInterrupt:
+                print("\n\nScraping interrupted by user")
+                break
+        
+        print("\n" + "="*60)
+        print("SCRAPING COMPLETE")
+        print("="*60)
+        print(f"Combinations scraped: {combinations_scraped}")
+        print(f"Total decks saved: {total_saved}")
+        print(f"Output file: {self.output_file}")
+        print("="*60)
+
+
+if __name__ == '__main__':
+    scraper = MoxfieldThemeScraper()
+    scraper.run_full_scrape()

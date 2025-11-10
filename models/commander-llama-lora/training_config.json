@@ -1,0 +1,19 @@
+{
+  "base_model": "models/llama-3.1-8b",
+  "training_data": "data/training/combined_training.jsonl",
+  "num_examples": 65480,
+  "lora_rank": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "learning_rate": 0.0002,
+  "num_epochs": 3,
+  "batch_size": 1,
+  "gradient_accumulation_steps": 16,
+  "effective_batch_size": 16,
+  "max_seq_length": 2048,
+  "total_steps": 12276,
+  "trainable_params": 41943040,
+  "trainable_percent": 0.5195983464188562,
+  "device": "xpu",
+  "start_time": "2025-10-24T15:50:34.570530"
+}

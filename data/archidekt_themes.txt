@@ -1,0 +1,118 @@
+# Archidekt Deck Tags for Targeted Scraping
+# Matches common Commander archetypes and strategies
+# Format: TagName (optional notes)
+
+# Core Strategy Tags
+Aggro
+Combo
+Control
+Midrange
+Stax
+Group Hug
+Voltron
+Reanimator
+Tokens
+Aristocrats
+Storm
+Wheels
+
+# Competitive Level
+cEDH
+Casual
+Budget
+
+# Specific Strategies
++1/+1 Counters
+-1/-1 Counters
+Blink
+Clones
+Landfall
+Graveyard
+Superfriends
+Tribal
+Artifacts
+Enchantress
+Spellslinger
+Go Wide
+Ramp
+Control
+Burn
+Mill
+Lifegain
+Infect
+Proliferate
+Sacrifice
+Cascading
+Cycling
+Madness
+
+# Tribal Types (Creature Types)
+Dragons
+Elves
+Goblins
+Zombies
+Vampires
+Humans
+Angels
+Demons
+Spirits
+Cats
+Dogs
+Birds
+Wizards
+Knights
+Soldiers
+Merfolk
+Slivers
+Elementals
+Dinosaurs
+Pirates
+Ninjas
+Werewolves
+Eldrazi
+Artifacts
+Tyranids
+Phyrexians
+
+# Combat Strategies
+Extra Turns
+Extra Combats
+Unblockable
+Flying
+Double Strike
+First Strike
+Trample
+Menace
+Deathtouch
+Lifelink
+
+# Resource Strategies
+Card Draw
+Ramp
+Removal
+Counterspells
+Tutors
+Recursion
+Protection
+Evasion
+Discard
+Theft
+
+# Win Conditions
+Combo
+Beatdown
+Mill
+Burn
+Infect
+Commander Damage
+Alternative Win Cons
+Lab Man
+Thoracle
+
+# Power Brackets (EDH Brackets 1-5)
+# These aren't tags but we can filter by edhBracket in API
+# Bracket 1: Precon level
+# Bracket 2: Casual optimized
+# Bracket 3: Focused/tuned
+# Bracket 4: High power
+# Bracket 5: cEDH
