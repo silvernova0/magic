@@ -177,6 +177,33 @@ export async function POST(req: NextRequest) {
           : [{ tags: ["ramp"], types_exclude: ["Land"] }]
       }
     };
+    
+    // cEDH-specific additions (Bracket 5)
+    if (bracket === 5) {
+      cardSelection.fast_mana = {
+        count: 8,
+        filters: [{ 
+          names: [
+            "Mana Crypt", "Mana Vault", "Chrome Mox", "Mox Diamond", 
+            "Grim Monolith", "Lotus Petal", "Lion's Eye Diamond", "Jeweled Lotus"
+          ]
+        }]
+      };
+      cardSelection.tutors = {
+        count: 8,
+        filters: [{ tags: ["tutor"] }]
+      };
+      cardSelection.free_interaction = {
+        count: 6,
+        filters: [{ 
+          oracle_text_includes: ["you may exile", "you may pay", "force of will", "pact of negation", "fierce guardianship"]
+        }]
+      };
+      cardSelection.efficient_removal = {
+        count: 6,
+        filters: [{ tags: ["removal"], cmc_max: 2 }]
+      };
+    }
 
     // Strategy-specific card selection
     if (strategyLower.includes('mill')) {
@@ -385,6 +412,142 @@ export async function POST(req: NextRequest) {
             tags: ["removal"],
             rarity_not: bracket <= 2 ? ["mythic"] : undefined
           }]
+        }
+      };
+    } else if (strategyLower.includes('group hug') || strategyLower.includes('group-hug')) {
+      // Group Hug: help all players equally
+      cardSelection = {
+        ...cardSelection,
+        group_hug_effects: {
+          count: 20,
+          filters: [{ 
+            oracle_text_includes: [
+              "each player draws", 
+              "each opponent draws",
+              "each player may",
+              "each player searches",
+              "howling mine",
+              "font of mythos",
+              "rites of flourishing"
+            ]
+          }]
+        },
+        pillow_fort: {
+          count: 10,
+          filters: [{ 
+            oracle_text_includes: [
+              "can't attack you",
+              "ghostly prison",
+              "propaganda",
+              "sphere of safety",
+              "prevent all combat damage"
+            ]
+          }]
+        },
+        creatures: {
+          count: 12,
+          filters: [{ types: ["Creature"] }]
+        },
+        card_draw: {
+          count: 8,
+          filters: [{ tags: ["card_draw"] }]
+        },
+        protection: {
+          count: 3,
+          filters: [{ tags: ["protection"] }]
+        }
+      };
+    } else if (strategyLower.includes('stax')) {
+      // Stax: tax and slow down opponents
+      cardSelection = {
+        ...cardSelection,
+        stax_pieces: {
+          count: 18,
+          filters: [{ 
+            oracle_text_includes: [
+              "players can't",
+              "opponents can't",
+              "spells cost",
+              "winter orb",
+              "static orb",
+              "thalia",
+              "sphere of resistance",
+              "trinisphere",
+              "rule of law"
+            ]
+          }]
+        },
+        creatures: {
+          count: 15,
+          filters: [{ types: ["Creature"] }]
+        },
+        removal: {
+          count: 10,
+          filters: [{ tags: ["removal"] }]
+        },
+        card_draw: {
+          count: 6,
+          filters: [{ tags: ["card_draw"] }]
+        },
+        protection: {
+          count: 4,
+          filters: [{ tags: ["protection"] }]
+        }
+      };
+    } else if (strategyLower.includes('aristocrats') || strategyLower.includes('sacrifice')) {
+      // Aristocrats: sacrifice creatures for value
+      cardSelection = {
+        ...cardSelection,
+        sacrifice_outlets: {
+          count: 8,
+          filters: [{ 
+            oracle_text_includes: ["sacrifice a creature", "sacrifice another creature"]
+          }]
+        },
+        death_triggers: {
+          count: 15,
+          filters: [{ 
+            oracle_text_includes: ["whenever a creature dies", "whenever another creature dies", "when a creature you control dies"]
+          }]
+        },
+        creatures: {
+          count: 25,
+          filters: [{ types: ["Creature"] }]
+        },
+        removal: {
+          count: 6,
+          filters: [{ tags: ["removal"] }]
+        },
+        card_draw: {
+          count: 5,
+          filters: [{ tags: ["card_draw"] }]
+        }
+      };
+    } else if (strategyLower.includes('spellslinger')) {
+      // Spellslinger: cast lots of instants/sorceries
+      cardSelection = {
+        ...cardSelection,
+        instants: {
+          count: 18,
+          filters: [{ types: ["Instant"] }]
+        },
+        sorceries: {
+          count: 12,
+          filters: [{ types: ["Sorcery"] }]
+        },
+        spell_payoffs: {
+          count: 10,
+          filters: [{ 
+            oracle_text_includes: ["whenever you cast an instant", "whenever you cast a sorcery", "whenever you cast or copy"]
+          }]
+        },
+        creatures: {
+          count: 8,
+          filters: [{ types: ["Creature"] }]
+        },
+        card_draw: {
+          count: 5,
+          filters: [{ tags: ["card_draw"] }]
         }
       };
     } else {
