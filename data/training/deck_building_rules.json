@@ -321,6 +321,196 @@
         "combos": "+1 to +2",
         "reason": "More sacrifice fodder, draw from death triggers"
       }
+    },
+    "tokens": {
+      "description": "Create many creature tokens, go wide strategy",
+      "adjustments": {
+        "creatures": "+3 to +5",
+        "token_generators": "+10 to +15",
+        "anthems": "+5 to +8",
+        "removal": "-3 to -5",
+        "reason": "Token generators and anthem effects, go wide and pump the team"
+      }
+    },
+    "tempo": {
+      "description": "Play threats while disrupting opponents, maintain board advantage",
+      "adjustments": {
+        "creatures": "+3 to +5",
+        "removal": "+3 to +5",
+        "card_draw": "+2 to +4",
+        "counterspells": "+3 to +5",
+        "reason": "Balance threats and answers, stay ahead on board"
+      }
+    },
+    "lifegain": {
+      "description": "Gain life and leverage life total as resource",
+      "adjustments": {
+        "creatures": "+3 to +5",
+        "lifegain_payoffs": "+8 to +12",
+        "removal": "-2 to -4",
+        "reason": "Life gain triggers and payoffs, stabilize then win"
+      }
+    },
+    "mill": {
+      "description": "Win by decking opponents, graveyard disruption",
+      "adjustments": {
+        "mill_effects": "+15 to +20",
+        "creatures": "-10 to -15",
+        "card_draw": "+3 to +5",
+        "reason": "Mill opponents out, minimal creature presence"
+      }
+    },
+    "group_hug": {
+      "description": "Help everyone, then win with political advantage or combo",
+      "adjustments": {
+        "card_draw": "+8 to +12",
+        "ramp": "+3 to +5",
+        "group_benefits": "+10 to +15",
+        "removal": "-5 to -8",
+        "reason": "Help everyone draw and ramp, then leverage advantage"
+      }
+    },
+    "group_slug": {
+      "description": "Punish opponents for playing the game",
+      "adjustments": {
+        "punishment_effects": "+10 to +15",
+        "creatures": "-5 to -8",
+        "card_draw": "+3 to +5",
+        "reason": "Symmetrical damage effects, drain everyone slowly"
+      }
+    },
+    "lands_matter": {
+      "description": "Landfall triggers, extra land drops, lands as win condition",
+      "adjustments": {
+        "lands": "+3 to +6",
+        "ramp": "+5 to +8",
+        "landfall_payoffs": "+8 to +12",
+        "creatures": "-3 to -5",
+        "reason": "More lands for triggers, extra land drop effects"
+      }
+    },
+    "artifacts": {
+      "description": "Artifact synergies, affinity, artifact creatures",
+      "adjustments": {
+        "artifacts": "+15 to +20",
+        "artifact_synergies": "+8 to +12",
+        "creatures": "-8 to -12",
+        "reason": "Maximize artifacts for synergy triggers"
+      }
+    },
+    "enchantments": {
+      "description": "Enchantment synergies, constellation, enchantress effects",
+      "adjustments": {
+        "enchantments": "+15 to +20",
+        "enchantment_synergies": "+8 to +12",
+        "creatures": "-8 to -12",
+        "reason": "Maximize enchantments for constellation/enchantress triggers"
+      }
+    },
+    "superfriends": {
+      "description": "Planeswalker tribal, protect and proliferate",
+      "adjustments": {
+        "planeswalkers": "+10 to +15",
+        "protection": "+5 to +8",
+        "board_wipes": "+3 to +5",
+        "creatures": "-10 to -15",
+        "reason": "Many planeswalkers, protect them, control board"
+      }
+    },
+    "midrange": {
+      "description": "Flexible gameplan, value creatures, adapt to meta",
+      "adjustments": {
+        "creatures": "+5 to +8",
+        "card_draw": "+3 to +5",
+        "removal": "+3 to +5",
+        "reason": "Well-rounded deck, good creatures and interaction"
+      }
+    },
+    "self_mill": {
+      "description": "Mill yourself to fuel graveyard strategies",
+      "adjustments": {
+        "self_mill_effects": "+10 to +15",
+        "graveyard_payoffs": "+8 to +12",
+        "creatures": "-5 to -8",
+        "reason": "Fill graveyard quickly, leverage it as second hand"
+      }
+    },
+    "discard": {
+      "description": "Make opponents discard, benefit from discard triggers",
+      "adjustments": {
+        "discard_effects": "+12 to +18",
+        "card_draw": "+5 to +8",
+        "creatures": "-8 to -12",
+        "reason": "Strip opponent's hands, generate value from discard"
+      }
+    },
+    "cycling": {
+      "description": "Cycle cards for value, cycling payoffs",
+      "adjustments": {
+        "cycling_cards": "+15 to +20",
+        "cycling_payoffs": "+8 to +12",
+        "lands": "+2 to +4",
+        "creatures": "-5 to -8",
+        "reason": "Many cycling cards, payoffs trigger on each cycle"
+      }
+    },
+    "go_wide": {
+      "description": "Many creatures, overrun effects, go wide strategy",
+      "adjustments": {
+        "creatures": "+10 to +15",
+        "anthems": "+5 to +8",
+        "overrun_effects": "+5 to +8",
+        "removal": "-5 to -8",
+        "reason": "Flood board with creatures, pump team and swing"
+      }
+    },
+    "pillowfort": {
+      "description": "Prevent attacks, taxing effects, defensive strategy",
+      "adjustments": {
+        "pillowfort_effects": "+12 to +18",
+        "card_draw": "+5 to +8",
+        "creatures": "-10 to -15",
+        "reason": "Prevent combat damage, control with taxes, win slowly"
+      }
+    },
+    "turbo_fog": {
+      "description": "Fog effects every turn, prevent all combat damage",
+      "adjustments": {
+        "fog_effects": "+15 to +20",
+        "card_draw": "+8 to +12",
+        "creatures": "-15 to -20",
+        "reason": "Prevent all damage, draw cards, win with alternate wincon"
+      }
+    },
+    "hate_bears": {
+      "description": "Small creatures that disrupt opponents",
+      "adjustments": {
+        "creatures": "+10 to +15",
+        "hatebears": "+12 to +18",
+        "protection": "+3 to +5",
+        "removal": "-5 to -8",
+        "reason": "Many small disruptive creatures, taxing effects"
+      }
+    },
+    "infect": {
+      "description": "Win with poison counters, proliferate",
+      "adjustments": {
+        "creatures": "+8 to +12",
+        "pump_spells": "+8 to +12",
+        "proliferate": "+5 to +8",
+        "removal": "-5 to -8",
+        "reason": "Infect creatures, pump them, 10 poison kills"
+      }
+    },
+    "wheels": {
+      "description": "Wheel effects, discard and draw 7, graveyard/hand synergies",
+      "adjustments": {
+        "wheel_effects": "+10 to +15",
+        "wheel_payoffs": "+8 to +12",
+        "card_draw": "+5 to +8",
+        "creatures": "-8 to -12",
+        "reason": "Wheel to refill hands, trigger Nekusar/waste-not effects"
+      }
     }
   },
   "card_type_distribution": {

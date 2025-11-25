@@ -16,45 +16,67 @@ const DeckBuilderPage: React.FC = () => {
 
   const handleBuildDeck = useCallback(async (params: {
     commander: string;
+    partner?: string; // NEW
     theme: string;
     colors: string[];
     powerLevel: string;
     useCollectionOnly: boolean;
+    useLocalModel?: boolean;
     avoidSaltCards: boolean;
     collection: string;
   }) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Always use v3 deck builder endpoint (build-from-collection)
-      // It supports both collection-only and all-cards modes
-      const endpoint = '/api/commander/build-from-collection';
-      
+      // Use local AI model endpoint if enabled, otherwise use template-based builder
+      const endpoint = params.useLocalModel
+        ? '/api/commander/build-local'
+        : '/api/commander/build-from-collection';
+
       const requestBody = {
         commander: params.commander,
+        partner: params.partner, // NEW
         strategy: params.theme.toLowerCase(),
         powerLevel: parseInt(params.powerLevel),
         bracket: parseInt(params.powerLevel),
-        useCollectionOnly: params.useCollectionOnly, // Pass the checkbox state
-        avoidSaltCards: params.avoidSaltCards, // Pass salt avoidance preference
-        colors: params.colors, // Pass color restrictions
+        useCollectionOnly: params.useCollectionOnly,
+        avoidSaltCards: params.avoidSaltCards,
+        colors: params.colors,
       };
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(300000), // 5 minute timeout for AI generation
       });
+      // Read response as text (safer) then parse JSON — this lets us capture raw HTML / debug
+      const raw = await response.text();
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to build deck');
+        // Try to parse as JSON if possible, otherwise include a short raw snippet for debugging
+        try {
+          const parsedErr = JSON.parse(raw);
+          // Include optional debug snippet returned by server
+          const debug = parsedErr.debug ? ` (debug: ${parsedErr.debug.slice(0, 512)})` : '';
+          throw new Error(`${parsedErr.error || parsedErr.detail || 'Failed to build deck'}${debug}`);
+        } catch {
+          const snippet = raw ? raw.slice(0, 512).replace(/\s+/g, ' ') : '[empty response]';
+          throw new Error(`Server returned status ${response.status}: ${snippet}`);
+        }
       }
 
-      const result = await response.json();
-      
+      let result: any;
+      try {
+        result = JSON.parse(raw);
+      } catch (parseErr) {
+        const snippet = raw ? raw.slice(0, 512).replace(/\s+/g, ' ') : '[empty response]';
+        console.error('Invalid JSON from build endpoint (head):', snippet);
+        throw new Error(`Invalid JSON from server: ${snippet}`);
+      }
+
       // Redirect to the generated deck instead of showing it here
       if (result.deck && result.deck.id) {
         router.push(`/decks/${result.deck.id}?new=true`);
@@ -76,13 +98,13 @@ const DeckBuilderPage: React.FC = () => {
           <Link href="/decks">My Decks</Link>
         </Button>
       </header>
-      
+
       <Tabs defaultValue="builder" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="builder">Deck Builder</TabsTrigger>
           <TabsTrigger value="browser">Card Browser</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="builder">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
             <div className="bg-card rounded-lg shadow-lg p-6 border">
@@ -106,9 +128,9 @@ const DeckBuilderPage: React.FC = () => {
                     <h3 className="text-xl font-bold mb-2">Error</h3>
                     <p>{error}</p>
                   </div>
-                  <Button 
-                    onClick={() => setError(null)} 
-                    variant="outline" 
+                  <Button
+                    onClick={() => setError(null)}
+                    variant="outline"
                     className="mt-4"
                   >
                     Try Again
@@ -125,7 +147,7 @@ const DeckBuilderPage: React.FC = () => {
             </div>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="browser">
           <div className="mt-6">
             <CardBrowser />

@@ -1,0 +1,16 @@
+[Unit]
+Description=JankBuild Next.js Web Server
+After=network.target jankbuild-api.service
+
+[Service]
+Type=simple
+User=social
+WorkingDirectory=/home/social/magicapp
+ExecStart=/usr/bin/npm run dev
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/social/magicapp/logs/nextjs.log
+StandardError=append:/home/social/magicapp/logs/nextjs.log
+
+[Install]
+WantedBy=multi-user.target

@@ -18,11 +18,15 @@ async function main() {
     const commanders = await prisma.card.findMany({
       where: {
         isCommander: true,
+        edhrecRank: { not: null, lt: 2000 }, // Top 2000 commanders
+        NOT: {
+          name: { startsWith: 'A-' } // Exclude Alchemy cards
+        }
       },
       orderBy: {
         edhrecRank: 'asc',
       },
-      take: 100, // Top 100 commanders
+      take: 50, // Top 50 commanders
       select: {
         id: true,
         name: true,

@@ -12,7 +12,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized. Please sign in.' },
@@ -26,14 +26,24 @@ export async function GET(request: NextRequest) {
     const rarity = searchParams.get('rarity');
     const color = searchParams.get('color');
     const type = searchParams.get('type');
+    const search = searchParams.get('search');
+
+    // Pagination params
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '24');
+    const skip = (page - 1) * limit;
 
     // Build where clause
     const where: any = { userId: user.id };
-    
-    if (rarity && rarity !== 'all') {
-      where.rarity = rarity;
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
     }
-    
+
+    if (rarity && rarity !== 'all') {
+      where.rarity = { equals: rarity, mode: 'insensitive' };
+    }
+
     if (color && color !== 'all') {
       if (color === 'colorless') {
         where.colors = '';
@@ -41,37 +51,49 @@ export async function GET(request: NextRequest) {
         where.colors = { contains: color };
       }
     }
-    
+
     if (type) {
       where.type_line = { contains: type, mode: 'insensitive' };
     }
 
+    // Get total count for pagination
+    const totalCards = await prisma.userCard.count({ where });
+
+    // Get paginated cards
     const cards = await prisma.userCard.findMany({
       where,
       orderBy: { [sortBy]: sortOrder },
+      skip,
+      take: limit,
     });
 
-    // Calculate stats
-    const totalCards = cards.reduce((sum, card) => sum + card.quantity, 0);
-    const uniqueCards = cards.length;
-    
-    // Calculate total value (if prices are available)
-    // Note: UserCard model doesn't have price field, but can be added
-    
+    // Calculate aggregate stats (needs separate query if filters applied, 
+    // or we can just return total collection stats separately if needed, 
+    // but for now let's just return the count of filtered items)
+
+    // For the "Total Cards" and "Unique Cards" badges in the UI, 
+    // we might want the UNFILTERED counts. Let's fetch those if it's the first page
+    // or just always fetch them (lightweight count query).
+    const totalCollectionCount = await prisma.userCard.count({ where: { userId: user.id } });
+    // Unique count is just total count in this schema since each UserCard is an entry, 
+    // unless we group by name. For now, let's stick to simple counts.
+
     return NextResponse.json({
       success: true,
       stats: {
-        totalCards,
-        uniqueCards,
+        totalCards: totalCollectionCount, // Total in entire collection
+        filteredCards: totalCards,        // Total matching current filters
+        totalPages: Math.ceil(totalCards / limit),
+        currentPage: page,
       },
       cards,
     });
   } catch (error) {
     console.error('Error fetching collection:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to fetch collection' 
+      {
+        success: false,
+        error: 'Failed to fetch collection'
       },
       { status: 500 }
     );
@@ -81,7 +103,7 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized. Please sign in.' },
@@ -102,9 +124,9 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('Error clearing collection:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Failed to clear collection' 
+      {
+        success: false,
+        error: 'Failed to clear collection'
       },
       { status: 500 }
     );

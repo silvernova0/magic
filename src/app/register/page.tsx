@@ -138,6 +138,13 @@ export default function RegisterPage() {
                 Sign in
               </Link>
             </div>
+            <div className="text-center text-xs text-gray-500 mt-4">
+              By registering, you agree to our{" "}
+              <Link href="/privacy" className="text-blue-500 hover:underline">
+                Privacy Policy
+              </Link>
+              .
+            </div>
           </form>
         </CardContent>
       </Card>

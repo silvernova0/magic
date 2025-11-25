@@ -57,16 +57,16 @@ class MTGGoldfishCommanderScraper:
         self.date_range = f"{start_date.strftime('%m/%d/%Y')} - {end_date.strftime('%m/%d/%Y')}"
     
     def get_commander_list(self) -> list:
-        """Get all legendary creatures/planeswalkers from database that can be commanders"""
+        """Get all commanders from database (creatures, vehicles, planeswalkers with commander text)"""
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             
-            # Get legendary creatures and planeswalkers (exclude Arena variants and tokens)
+            # Get all legal commanders using the isCommander field
+            # This includes: Legendary Creatures, Legendary Vehicles, and cards with "can be your commander"
             cursor.execute("""
                 SELECT DISTINCT name FROM Card 
-                WHERE ((typeLine LIKE '%Legendary%' AND typeLine LIKE '%Creature%')
-                   OR (typeLine LIKE '%Legendary%' AND typeLine LIKE '%Planeswalker%'))
+                WHERE isCommander = 1
                 AND name NOT LIKE 'A-%'
                 AND edhrecRank IS NOT NULL
                 ORDER BY edhrecRank

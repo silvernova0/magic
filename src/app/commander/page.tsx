@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
@@ -36,6 +36,43 @@ export default function CommanderPage() {
   const [importing, setImporting] = useState<string | null>(null);
   const [modalDeck, setModalDeck] = useState<any | null>(null);
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [commanderSuggestions, setCommanderSuggestions] = useState<string[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+
+  // Auto-complete commander search using local database
+  useEffect(() => {
+    const fetchCommanderSuggestions = async () => {
+      if (query.length < 2) {
+        setCommanderSuggestions([]);
+        setShowAutocomplete(false);
+        return;
+      }
+
+      try {
+        // Use local card database with isCommander filter and EDHREC ranking
+        const params = new URLSearchParams({
+          name: query,
+          isCommander: 'true',
+          sortBy: 'edhrecRank',
+          sortOrder: 'asc',
+          limit: '10',
+        });
+        
+        const response = await fetch(`/api/cards/search?${params}`);
+        if (response.ok) {
+          const data = await response.json();
+          const suggestions = data.cards?.map((card: any) => card.name) || [];
+          setCommanderSuggestions(suggestions);
+          setShowAutocomplete(suggestions.length > 0);
+        }
+      } catch (error) {
+        console.error('Error fetching commander suggestions:', error);
+      }
+    };
+
+    const debounce = setTimeout(fetchCommanderSuggestions, 300);
+    return () => clearTimeout(debounce);
+  }, [query]);
 
   async function searchCommander(e?: React.FormEvent) {
     e?.preventDefault();
@@ -99,12 +136,35 @@ export default function CommanderPage() {
       <Card className="mb-6 border-2">
         <CardContent className="pt-6">
           <form onSubmit={searchCommander} className="flex gap-2">
-            <input
-              className="bg-background border-2 border-input hover:border-purple-500/50 focus:border-purple-500 transition-colors rounded-lg px-4 py-3 flex-1 text-lg"
-              placeholder="Enter commander name (e.g. Tatyova, Benthic Druid)"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            <div className="flex-1 relative">
+              <input
+                className="bg-background border-2 border-input hover:border-purple-500/50 focus:border-purple-500 transition-colors rounded-lg px-4 py-3 w-full text-lg"
+                placeholder="Enter commander name (e.g. Tatyova, Benthic Druid)"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={() => setShowAutocomplete(commanderSuggestions.length > 0)}
+                onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
+                autoComplete="off"
+              />
+              {showAutocomplete && commanderSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-background border-2 border-purple-500/50 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {commanderSuggestions.map((name, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      className="w-full text-left px-4 py-2 hover:bg-purple-500/20 transition-colors border-b border-border last:border-0"
+                      onClick={() => {
+                        setQuery(name);
+                        setCommanderSuggestions([]);
+                        setShowAutocomplete(false);
+                      }}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <Button type="submit" size="lg" className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
               Search
             </Button>

@@ -25,6 +25,7 @@ export const DECK_THEMES = [
   'Reanimator',
   'Lifegain',
   'Mill',
+  'Self Mill',
   'Group Hug',
   'Group Slug',
   'Lands Matter',
@@ -32,6 +33,14 @@ export const DECK_THEMES = [
   'Artifacts',
   'Enchantments',
   'Superfriends',
+  'Discard',
+  'Cycling',
+  'Go Wide',
+  'Pillowfort',
+  'Turbo Fog',
+  'Hate Bears',
+  'Infect',
+  'Wheels',
 ];
 
 // Kindred/Tribal creature types

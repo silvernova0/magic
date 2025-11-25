@@ -123,7 +123,7 @@ def scrape_average_deck(commander_name):
         return None
 
 def get_commander_list_from_db():
-    """Get list of legendary creatures from database"""
+    """Get list of all legal commanders from database"""
     import sqlite3
     
     db_path = Path(__file__).parent.parent / "prisma" / "dev.db"
@@ -135,12 +135,11 @@ def get_commander_list_from_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # Get all legendary creatures (excluding Arena variants with A- prefix)
+    # Get all commanders (legendary creatures + vehicles + special commanders)
     cursor.execute("""
         SELECT DISTINCT name 
         FROM Card 
-        WHERE typeLine LIKE '%Legendary%' 
-          AND typeLine LIKE '%Creature%'
+        WHERE isCommander = 1
           AND name NOT LIKE 'A-%'
         ORDER BY name
     """)

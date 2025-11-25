@@ -1,0 +1,32 @@
+{
+    "commander": "Momir Vig, Simic Visionary",
+    "strategy": "Kindred Elves",
+    "power_level": 7,
+    "bracket": 3,
+    "card_selection": {
+        "creatures": {
+            "count": 20,
+            "filters": [
+                {
+                    "types": [
+                        "Creature"
+                    ]
+                }
+            ]
+        },
+        "planeswalkers": {
+            "count": 10,
+            "filters": [
+                {
+                    "types": [
+                        "Planeswalker"
+                    ]
+                }
+            ]
+        },
+        "lands": {
+            "count": 35,
+            "filters": []
+        }
+    }
+}

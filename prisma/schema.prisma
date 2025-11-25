@@ -280,3 +280,14 @@ enum FeedbackType {
   DECK_ISSUE
 }
 
+// ============================================
+// SYSTEM SETTINGS
+// ============================================
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+

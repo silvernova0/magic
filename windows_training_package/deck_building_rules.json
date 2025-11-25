@@ -1,0 +1,592 @@
+{
+  "description": "Commander deck building ratios by bracket and strategy",
+  "source": "Mythic Vault wisdom + EDHREC data + community consensus",
+  "version": "1.0",
+  "brackets": {
+    "1": {
+      "description": "Precon power, beginner friendly, minimal tutors/fast mana",
+      "base_ratios": {
+        "lands": {
+          "min": 38,
+          "max": 40,
+          "reason": "Higher land count for consistency, fewer cheap rocks"
+        },
+        "ramp": {
+          "min": 10,
+          "max": 12,
+          "reason": "Mostly creature-based and 2+ CMC artifacts"
+        },
+        "card_draw": {
+          "min": 8,
+          "max": 10,
+          "reason": "Simple cantrips and draw spells"
+        },
+        "removal": {
+          "min": 6,
+          "max": 8,
+          "reason": "Spot removal for threats"
+        },
+        "board_wipes": {
+          "min": 2,
+          "max": 3,
+          "reason": "Reset button when behind"
+        },
+        "tutors": {
+          "min": 0,
+          "max": 2,
+          "reason": "Minimal tutoring, high CMC tutors only"
+        },
+        "combos": {
+          "min": 0,
+          "max": 1,
+          "reason": "Accidental combos only, not primary wincon"
+        },
+        "protection": {
+          "min": 2,
+          "max": 4,
+          "reason": "Counterspells, hexproof, indestructible"
+        }
+      }
+    },
+    "2": {
+      "description": "Optimized precon, focused strategy, some staples",
+      "base_ratios": {
+        "lands": {
+          "min": 36,
+          "max": 38,
+          "reason": "More ramp allows fewer lands"
+        },
+        "ramp": {
+          "min": 11,
+          "max": 13,
+          "reason": "Mix of creatures and artifacts, some 1-2 CMC rocks"
+        },
+        "card_draw": {
+          "min": 10,
+          "max": 12,
+          "reason": "Card advantage engines, more reliable draw"
+        },
+        "removal": {
+          "min": 7,
+          "max": 10,
+          "reason": "Mix of spot removal and flexible answers"
+        },
+        "board_wipes": {
+          "min": 2,
+          "max": 4,
+          "reason": "Conditional or one-sided wipes"
+        },
+        "tutors": {
+          "min": 1,
+          "max": 3,
+          "reason": "A few tutors for key pieces, still high CMC"
+        },
+        "combos": {
+          "min": 0,
+          "max": 2,
+          "reason": "Possible win condition but not primary focus"
+        },
+        "protection": {
+          "min": 3,
+          "max": 5,
+          "reason": "Protecting key pieces and commander"
+        }
+      }
+    },
+    "3": {
+      "description": "High power, staples in every slot, multiple wincons",
+      "base_ratios": {
+        "lands": {
+          "min": 34,
+          "max": 37,
+          "reason": "Efficient ramp package allows lower land count"
+        },
+        "ramp": {
+          "min": 12,
+          "max": 14,
+          "reason": "Fast mana rocks (Sol Ring, Mana Crypt, etc.)"
+        },
+        "card_draw": {
+          "min": 12,
+          "max": 15,
+          "reason": "Strong card advantage engines, multiple sources"
+        },
+        "removal": {
+          "min": 8,
+          "max": 12,
+          "reason": "Efficient removal, instant speed, flexible"
+        },
+        "board_wipes": {
+          "min": 3,
+          "max": 5,
+          "reason": "One-sided wipes preferred"
+        },
+        "tutors": {
+          "min": 3,
+          "max": 6,
+          "reason": "Tutors for combo pieces or key answers"
+        },
+        "combos": {
+          "min": 1,
+          "max": 3,
+          "reason": "2-3 card combos as wincons"
+        },
+        "protection": {
+          "min": 5,
+          "max": 8,
+          "reason": "Counterspells, free protection, boots/greaves"
+        }
+      }
+    },
+    "4": {
+      "description": "cEDH fringe, optimized combos, fast wins",
+      "base_ratios": {
+        "lands": {
+          "min": 30,
+          "max": 35,
+          "reason": "Low CMC curve, fetches, shocks, duals"
+        },
+        "ramp": {
+          "min": 13,
+          "max": 16,
+          "reason": "All fast mana available, dorks + rocks"
+        },
+        "card_draw": {
+          "min": 15,
+          "max": 20,
+          "reason": "Draw your combo as fast as possible"
+        },
+        "removal": {
+          "min": 10,
+          "max": 15,
+          "reason": "Efficient interaction, stops opponents' combos"
+        },
+        "board_wipes": {
+          "min": 1,
+          "max": 3,
+          "reason": "Less relevant in fast meta, mostly creature wipes"
+        },
+        "tutors": {
+          "min": 6,
+          "max": 10,
+          "reason": "Tutor for combo pieces every game"
+        },
+        "combos": {
+          "min": 2,
+          "max": 4,
+          "reason": "Multiple compact combos (2-3 cards)"
+        },
+        "protection": {
+          "min": 8,
+          "max": 12,
+          "reason": "Free counterspells, Pact of Negation, etc."
+        }
+      }
+    },
+    "5": {
+      "description": "cEDH, turn 1-4 wins, max optimization",
+      "base_ratios": {
+        "lands": {
+          "min": 28,
+          "max": 32,
+          "reason": "Hyper-efficient landbase, mostly fetches/shocks/duals"
+        },
+        "ramp": {
+          "min": 15,
+          "max": 18,
+          "reason": "Every fast mana piece available"
+        },
+        "card_draw": {
+          "min": 20,
+          "max": 25,
+          "reason": "Cantrips, wheels, Ad Nauseam effects"
+        },
+        "removal": {
+          "min": 12,
+          "max": 18,
+          "reason": "Stopping opponent wins while setting up yours"
+        },
+        "board_wipes": {
+          "min": 0,
+          "max": 2,
+          "reason": "Too slow for cEDH, spot removal preferred"
+        },
+        "tutors": {
+          "min": 8,
+          "max": 12,
+          "reason": "Tutor every game, multiple lines to victory"
+        },
+        "combos": {
+          "min": 3,
+          "max": 5,
+          "reason": "Multiple 2-card combos with overlapping pieces"
+        },
+        "protection": {
+          "min": 10,
+          "max": 15,
+          "reason": "Free spells, Force of Will, Fierce Guardianship"
+        }
+      }
+    }
+  },
+  "strategy_modifiers": {
+    "tribal": {
+      "description": "Creature type synergy (Dragons, Elves, Zombies, etc.)",
+      "adjustments": {
+        "creatures": "+5 to +10",
+        "removal": "-2 to -4",
+        "reason": "More creatures for tribal synergy, less room for interaction"
+      }
+    },
+    "combo": {
+      "description": "Combo-focused deck, tutor for pieces and win",
+      "adjustments": {
+        "combos": "+2 to +4",
+        "tutors": "+3 to +5",
+        "protection": "+3 to +5",
+        "creatures": "-5 to -10",
+        "reason": "More combos, tutors to find them, protection to resolve them"
+      }
+    },
+    "aggro": {
+      "description": "Low curve, fast damage, weenies and pump",
+      "adjustments": {
+        "lands": "-2 to -4",
+        "creatures": "+8 to +12",
+        "card_draw": "-2 to -4",
+        "reason": "Lower curve needs fewer lands, more creatures"
+      }
+    },
+    "control": {
+      "description": "Reactive, answers everything, win late game",
+      "adjustments": {
+        "removal": "+5 to +8",
+        "board_wipes": "+2 to +4",
+        "card_draw": "+3 to +5",
+        "creatures": "-8 to -12",
+        "reason": "More interaction, fewer threats, win with card advantage"
+      }
+    },
+    "stompy": {
+      "description": "Big creatures, ramp, smash face",
+      "adjustments": {
+        "ramp": "+3 to +5",
+        "creatures": "+5 to +8",
+        "removal": "-3 to -5",
+        "reason": "More ramp for big threats, fewer answers"
+      }
+    },
+    "voltron": {
+      "description": "Commander damage, equipment, auras",
+      "adjustments": {
+        "protection": "+5 to +8",
+        "equipment_auras": "+8 to +12",
+        "card_draw": "-3 to -5",
+        "reason": "Protect commander, load it with buffs"
+      }
+    },
+    "spellslinger": {
+      "description": "Instants and sorceries matter",
+      "adjustments": {
+        "instants_sorceries": "+10 to +15",
+        "creatures": "-10 to -15",
+        "card_draw": "+3 to +5",
+        "reason": "Maximize spell count for triggers"
+      }
+    },
+    "reanimator": {
+      "description": "Graveyard recursion, cheat big creatures into play",
+      "adjustments": {
+        "card_draw": "+3 to +5",
+        "creatures": "+3 to +5",
+        "removal": "-2 to -4",
+        "reason": "Fill graveyard, reanimate threats"
+      }
+    },
+    "stax": {
+      "description": "Lock opponents out, prevent them from playing",
+      "adjustments": {
+        "protection": "+5 to +8",
+        "removal": "+3 to +5",
+        "creatures": "-5 to -8",
+        "stax_pieces": "+8 to +12",
+        "reason": "Lock pieces, protect them, win slowly"
+      }
+    },
+    "aristocrats": {
+      "description": "Sacrifice creatures for value and drain",
+      "adjustments": {
+        "creatures": "+5 to +8",
+        "card_draw": "+2 to +4",
+        "combos": "+1 to +2",
+        "reason": "More sacrifice fodder, draw from death triggers"
+      }
+    },
+    "tokens": {
+      "description": "Create many creature tokens, go wide strategy",
+      "adjustments": {
+        "creatures": "+3 to +5",
+        "token_generators": "+10 to +15",
+        "anthems": "+5 to +8",
+        "removal": "-3 to -5",
+        "reason": "Token generators and anthem effects, go wide and pump the team"
+      }
+    },
+    "tempo": {
+      "description": "Play threats while disrupting opponents, maintain board advantage",
+      "adjustments": {
+        "creatures": "+3 to +5",
+        "removal": "+3 to +5",
+        "card_draw": "+2 to +4",
+        "counterspells": "+3 to +5",
+        "reason": "Balance threats and answers, stay ahead on board"
+      }
+    },
+    "lifegain": {
+      "description": "Gain life and leverage life total as resource",
+      "adjustments": {
+        "creatures": "+3 to +5",
+        "lifegain_payoffs": "+8 to +12",
+        "removal": "-2 to -4",
+        "reason": "Life gain triggers and payoffs, stabilize then win"
+      }
+    },
+    "mill": {
+      "description": "Win by decking opponents, graveyard disruption",
+      "adjustments": {
+        "mill_effects": "+15 to +20",
+        "creatures": "-10 to -15",
+        "card_draw": "+3 to +5",
+        "reason": "Mill opponents out, minimal creature presence"
+      }
+    },
+    "group_hug": {
+      "description": "Help everyone, then win with political advantage or combo",
+      "adjustments": {
+        "card_draw": "+8 to +12",
+        "ramp": "+3 to +5",
+        "group_benefits": "+10 to +15",
+        "removal": "-5 to -8",
+        "reason": "Help everyone draw and ramp, then leverage advantage"
+      }
+    },
+    "group_slug": {
+      "description": "Punish opponents for playing the game",
+      "adjustments": {
+        "punishment_effects": "+10 to +15",
+        "creatures": "-5 to -8",
+        "card_draw": "+3 to +5",
+        "reason": "Symmetrical damage effects, drain everyone slowly"
+      }
+    },
+    "lands_matter": {
+      "description": "Landfall triggers, extra land drops, lands as win condition",
+      "adjustments": {
+        "lands": "+3 to +6",
+        "ramp": "+5 to +8",
+        "landfall_payoffs": "+8 to +12",
+        "creatures": "-3 to -5",
+        "reason": "More lands for triggers, extra land drop effects"
+      }
+    },
+    "artifacts": {
+      "description": "Artifact synergies, affinity, artifact creatures",
+      "adjustments": {
+        "artifacts": "+15 to +20",
+        "artifact_synergies": "+8 to +12",
+        "creatures": "-8 to -12",
+        "reason": "Maximize artifacts for synergy triggers"
+      }
+    },
+    "enchantments": {
+      "description": "Enchantment synergies, constellation, enchantress effects",
+      "adjustments": {
+        "enchantments": "+15 to +20",
+        "enchantment_synergies": "+8 to +12",
+        "creatures": "-8 to -12",
+        "reason": "Maximize enchantments for constellation/enchantress triggers"
+      }
+    },
+    "superfriends": {
+      "description": "Planeswalker tribal, protect and proliferate",
+      "adjustments": {
+        "planeswalkers": "+10 to +15",
+        "protection": "+5 to +8",
+        "board_wipes": "+3 to +5",
+        "creatures": "-10 to -15",
+        "reason": "Many planeswalkers, protect them, control board"
+      }
+    },
+    "midrange": {
+      "description": "Flexible gameplan, value creatures, adapt to meta",
+      "adjustments": {
+        "creatures": "+5 to +8",
+        "card_draw": "+3 to +5",
+        "removal": "+3 to +5",
+        "reason": "Well-rounded deck, good creatures and interaction"
+      }
+    },
+    "self_mill": {
+      "description": "Mill yourself to fuel graveyard strategies",
+      "adjustments": {
+        "self_mill_effects": "+10 to +15",
+        "graveyard_payoffs": "+8 to +12",
+        "creatures": "-5 to -8",
+        "reason": "Fill graveyard quickly, leverage it as second hand"
+      }
+    },
+    "discard": {
+      "description": "Make opponents discard, benefit from discard triggers",
+      "adjustments": {
+        "discard_effects": "+12 to +18",
+        "card_draw": "+5 to +8",
+        "creatures": "-8 to -12",
+        "reason": "Strip opponent's hands, generate value from discard"
+      }
+    },
+    "cycling": {
+      "description": "Cycle cards for value, cycling payoffs",
+      "adjustments": {
+        "cycling_cards": "+15 to +20",
+        "cycling_payoffs": "+8 to +12",
+        "lands": "+2 to +4",
+        "creatures": "-5 to -8",
+        "reason": "Many cycling cards, payoffs trigger on each cycle"
+      }
+    },
+    "go_wide": {
+      "description": "Many creatures, overrun effects, go wide strategy",
+      "adjustments": {
+        "creatures": "+10 to +15",
+        "anthems": "+5 to +8",
+        "overrun_effects": "+5 to +8",
+        "removal": "-5 to -8",
+        "reason": "Flood board with creatures, pump team and swing"
+      }
+    },
+    "pillowfort": {
+      "description": "Prevent attacks, taxing effects, defensive strategy",
+      "adjustments": {
+        "pillowfort_effects": "+12 to +18",
+        "card_draw": "+5 to +8",
+        "creatures": "-10 to -15",
+        "reason": "Prevent combat damage, control with taxes, win slowly"
+      }
+    },
+    "turbo_fog": {
+      "description": "Fog effects every turn, prevent all combat damage",
+      "adjustments": {
+        "fog_effects": "+15 to +20",
+        "card_draw": "+8 to +12",
+        "creatures": "-15 to -20",
+        "reason": "Prevent all damage, draw cards, win with alternate wincon"
+      }
+    },
+    "hate_bears": {
+      "description": "Small creatures that disrupt opponents",
+      "adjustments": {
+        "creatures": "+10 to +15",
+        "hatebears": "+12 to +18",
+        "protection": "+3 to +5",
+        "removal": "-5 to -8",
+        "reason": "Many small disruptive creatures, taxing effects"
+      }
+    },
+    "infect": {
+      "description": "Win with poison counters, proliferate",
+      "adjustments": {
+        "creatures": "+8 to +12",
+        "pump_spells": "+8 to +12",
+        "proliferate": "+5 to +8",
+        "removal": "-5 to -8",
+        "reason": "Infect creatures, pump them, 10 poison kills"
+      }
+    },
+    "wheels": {
+      "description": "Wheel effects, discard and draw 7, graveyard/hand synergies",
+      "adjustments": {
+        "wheel_effects": "+10 to +15",
+        "wheel_payoffs": "+8 to +12",
+        "card_draw": "+5 to +8",
+        "creatures": "-8 to -12",
+        "reason": "Wheel to refill hands, trigger Nekusar/waste-not effects"
+      }
+    }
+  },
+  "card_type_distribution": {
+    "description": "Rough distribution of card types in a typical deck",
+    "note": "These are guidelines, not strict rules. Commander + deck building ratio cards = ~60-70 cards. Remaining 30-40 are 'flex slots' for strategy-specific cards.",
+    "typical_breakdown": {
+      "commander": 1,
+      "lands": "34-40",
+      "ramp": "10-16",
+      "card_draw": "8-20",
+      "removal": "6-18",
+      "board_wipes": "0-5",
+      "tutors": "0-12",
+      "combos": "0-6",
+      "protection": "2-15",
+      "flex_slots": "30-40",
+      "flex_description": "Strategy-specific cards: creatures for tribal, spells for spellslinger, stax pieces for stax, etc."
+    }
+  },
+  "examples": {
+    "bracket_2_tribal": {
+      "description": "The Ur-Dragon tribal dragons deck, bracket 2",
+      "breakdown": {
+        "lands": 37,
+        "ramp": 13,
+        "card_draw": 11,
+        "removal": 8,
+        "board_wipes": 3,
+        "tutors": 2,
+        "combos": 0,
+        "protection": 3,
+        "dragons": 23,
+        "total": 100
+      },
+      "reasoning": "Base bracket 2 ratios + tribal modifier: +10 creatures (dragons), -2 removal. 23 dragons provide tribal synergy, Ur-Dragon cost reduction enables big plays."
+    },
+    "bracket_4_combo": {
+      "description": "Atraxa counters/superfriends combo deck, bracket 4",
+      "breakdown": {
+        "lands": 32,
+        "ramp": 15,
+        "card_draw": 18,
+        "removal": 12,
+        "board_wipes": 2,
+        "tutors": 8,
+        "combos": 4,
+        "protection": 9,
+        "total": 100
+      },
+      "reasoning": "Base bracket 4 ratios + combo modifier: +3 combos (Sage of Hours, Magistrate's Scepter, etc.), +4 tutors, +4 protection. High tutor count finds combo pieces."
+    },
+    "bracket_3_control": {
+      "description": "Shorikai control/card draw deck, bracket 3",
+      "breakdown": {
+        "lands": 35,
+        "ramp": 13,
+        "card_draw": 18,
+        "removal": 15,
+        "board_wipes": 6,
+        "tutors": 4,
+        "combos": 1,
+        "protection": 8,
+        "total": 100
+      },
+      "reasoning": "Base bracket 3 ratios + control modifier: +7 removal, +3 board wipes, +6 card draw, -10 creatures. Shorikai IS the creature, rest is answers and card advantage."
+    }
+  },
+  "usage_notes": [
+    "These ratios are GUIDELINES not strict rules",
+    "Commander identity affects available cards (color pie considerations)",
+    "Budget affects card choices (Mana Crypt vs Mind Stone)",
+    "Playgroup affects power level (kitchen table vs cEDH)",
+    "Strategy modifiers STACK with bracket base ratios",
+    "Flex slots (30-40 cards) are where strategy shines",
+    "Total cards must equal 99 + 1 commander (or 98 + 2 partner commanders)",
+    "These ratios come from EDHREC data analysis and community wisdom",
+    "v3 AI model should learn PATTERNS not memorize specific cards"
+  ]
+}

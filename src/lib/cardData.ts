@@ -11,28 +11,28 @@ export interface CardData {
   cmc: number;
   colors: string[];
   colorIdentity: string[];
-  
+
   // Type info
   typeLine: string;
   types: string[];
   subtypes: string[];
   supertypes: string[];
-  
+
   // Card text
   oracleText?: string;
   flavorText?: string;
-  
+
   // Stats
   power?: string;
   toughness?: string;
   loyalty?: string;
-  
+
   // Set info
   setCode: string;
   setName: string;
   rarity: string;
   collectorNumber?: string;
-  
+
   // Images from multiple sources
   images: {
     scryfall?: {
@@ -45,7 +45,7 @@ export interface CardData {
     mtgpics?: string;
     gatherer?: string;
   };
-  
+
   // Pricing (from Scryfall)
   prices?: {
     usd?: string;
@@ -53,7 +53,7 @@ export interface CardData {
     eur?: string;
     tix?: string;
   };
-  
+
   // Legality
   legalities?: {
     standard?: string;
@@ -64,7 +64,7 @@ export interface CardData {
     commander?: string;
     pauper?: string;
   };
-  
+
   // Metadata
   scryfallId?: string;
   oracleId?: string;
@@ -194,18 +194,26 @@ export function getMTGPicsUrl(cardName: string, set?: string): string {
 /**
  * Search cards with autocomplete
  */
-export async function searchCards(query: string, limit: number = 10): Promise<string[]> {
+export async function getCardSuggestions(query: string): Promise<string[]> {
+  if (!query || query.length < 2) {
+    return [];
+  }
+
   try {
+    // Use local autocomplete API instead of Scryfall
     const response = await fetch(
-      `https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(query)}`
+      `/api/cards/autocomplete?q=${encodeURIComponent(query)}`
     );
-    
-    if (!response.ok) return [];
-    
+
+    if (!response.ok) {
+      console.error('Autocomplete failed:', response.statusText);
+      return [];
+    }
+
     const data = await response.json();
-    return data.data.slice(0, limit);
+    return data.data || [];
   } catch (error) {
-    console.error('Card search error:', error);
+    console.error('Error fetching card suggestions:', error);
     return [];
   }
 }
@@ -216,21 +224,21 @@ export async function searchCards(query: string, limit: number = 10): Promise<st
 export async function getCardData(cardName: string, set?: string): Promise<CardData | null> {
   // Try Scryfall first (best data quality)
   let cardData = await fetchFromScryfall(cardName, set);
-  
+
   if (cardData) {
     // Enhance with MTGPics image
     cardData.images.mtgpics = getMTGPicsUrl(cardName, set);
     return cardData;
   }
-  
+
   // Fallback to MTG API
   cardData = await fetchFromMTGApi(cardName, set);
-  
+
   if (cardData) {
     cardData.images.mtgpics = getMTGPicsUrl(cardName, set);
     return cardData;
   }
-  
+
   return null;
 }
 
@@ -242,7 +250,7 @@ export async function batchFetchCards(
   delayMs: number = 100
 ): Promise<Map<string, CardData>> {
   const results = new Map<string, CardData>();
-  
+
   for (const name of cardNames) {
     const data = await getCardData(name);
     if (data) {
@@ -251,7 +259,7 @@ export async function batchFetchCards(
     // Rate limiting
     await new Promise(resolve => setTimeout(resolve, delayMs));
   }
-  
+
   return results;
 }
 
@@ -262,7 +270,7 @@ export async function getRandomCard(): Promise<CardData | null> {
   try {
     const response = await fetch('https://api.scryfall.com/cards/random');
     if (!response.ok) return null;
-    
+
     const data = await response.json();
     return fetchFromScryfall(data.name);
   } catch (error) {
@@ -278,7 +286,7 @@ export async function getCardById(scryfallId: string): Promise<CardData | null> 
   try {
     const response = await fetch(`https://api.scryfall.com/cards/${scryfallId}`);
     if (!response.ok) return null;
-    
+
     const data = await response.json();
     return fetchFromScryfall(data.name);
   } catch (error) {
@@ -295,19 +303,19 @@ export async function getCardPrintings(cardName: string): Promise<CardData[]> {
     const response = await fetch(
       `https://api.scryfall.com/cards/search?q=!"${encodeURIComponent(cardName)}"`
     );
-    
+
     if (!response.ok) return [];
-    
+
     const data = await response.json();
     const printings: CardData[] = [];
-    
+
     for (const card of data.data) {
       const cardData = await fetchFromScryfall(card.name, card.set);
       if (cardData) {
         printings.push(cardData);
       }
     }
-    
+
     return printings;
   } catch (error) {
     console.error('Card printings fetch error:', error);

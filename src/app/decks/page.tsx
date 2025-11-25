@@ -3,18 +3,37 @@ import { getCurrentUser } from '../../lib/user';
 import { Deck } from '@prisma/client';
 import Link from 'next/link';
 import DecksClient from '@/components/decks/DecksClient';
+import { calculateDeckPrice, hydrateDecklist } from '@/lib/deck-server-utils';
 
-async function getDecks(): Promise<Deck[]> {
+async function getDecks() {
   const user = await getCurrentUser();
   if (!user) {
     return [];
   }
-  return prisma.deck.findMany({
+  const decks = await prisma.deck.findMany({
     where: { userId: user.id },
     orderBy: {
       createdAt: 'desc',
     },
   });
+
+  // Calculate prices and hydrate decklists for all decks
+  const decksWithPrices = await Promise.all(decks.map(async (deck) => {
+    // Hydrate first to get price data
+    const hydratedDecklist = await hydrateDecklist(deck.decklist);
+    // Then calculate price from hydrated list
+    const priceData = calculateDeckPrice(hydratedDecklist);
+
+    return {
+      ...deck,
+      decklist: hydratedDecklist,
+      price: priceData.total,
+      currency: priceData.currency,
+      missingPrice: priceData.missing
+    };
+  }));
+
+  return decksWithPrices;
 }
 
 export default async function DecksPage() {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,8 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Search, Plus, Trash2, Edit, Image as ImageIcon } from 'lucide-react';
+import { Search, Plus, Trash2, Edit, Image as ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { CardData } from '@/lib/cardData';
+// Removed missing hook import, logic is implemented inline
 
 interface UserCard {
   id: string;
@@ -31,19 +32,43 @@ interface UserCard {
   quantity: number;
 }
 
-export default function CollectionClient({ initialCards }: { initialCards: UserCard[] }) {
+interface CollectionClientProps {
+  initialCards: UserCard[];
+  totalCards: number;
+}
+
+export default function CollectionClient({ initialCards, totalCards: initialTotalCards }: CollectionClientProps) {
   const [cards, setCards] = useState<UserCard[]>(initialCards);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [totalCards, setTotalCards] = useState(initialTotalCards);
+  const [filteredCount, setFilteredCount] = useState(initialTotalCards); // Initially assume all match until filtered
+
+  // Search & Filter State
   const [cardNameInput, setCardNameInput] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  // Filter State
   const [filterQuery, setFilterQuery] = useState('');
   const [selectedRarity, setSelectedRarity] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
 
-  // Auto-complete card search
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 24;
+  const totalPages = Math.ceil(filteredCount / limit);
+
+  // Debounce filter query
+  const [debouncedFilterQuery, setDebouncedFilterQuery] = useState(filterQuery);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedFilterQuery(filterQuery), 500);
+    return () => clearTimeout(timer);
+  }, [filterQuery]);
+
+  // Auto-complete card search (for adding new cards)
   useEffect(() => {
     const fetchSuggestions = async () => {
       if (cardNameInput.length < 2) {
@@ -66,7 +91,55 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
     return () => clearTimeout(debounce);
   }, [cardNameInput]);
 
-  // Fetch full card data when selected
+  // Fetch cards when filters or page change
+  const fetchCards = useCallback(async () => {
+    setIsFetching(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: limit.toString(),
+      });
+
+      if (debouncedFilterQuery) params.append('search', debouncedFilterQuery);
+      if (selectedRarity !== 'all') params.append('rarity', selectedRarity);
+      if (selectedColor !== 'all') params.append('color', selectedColor);
+
+      const response = await fetch(`/api/collection?${params.toString()}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setCards(data.cards);
+        setFilteredCount(data.stats.filteredCards);
+        // If we are on a page that no longer exists (e.g. deleted items), go back
+        if (data.stats.totalPages < currentPage && data.stats.totalPages > 0) {
+          setCurrentPage(1);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching collection:', error);
+    } finally {
+      setIsFetching(false);
+    }
+  }, [currentPage, debouncedFilterQuery, selectedRarity, selectedColor]);
+
+  // Trigger fetch when dependencies change
+  // Skip initial render fetch if we have initial data matching default state
+  // But since initial data is just first page sorted by date, and filters might be different, 
+  // we should probably just fetch if state differs from initial. 
+  // For simplicity, let's just fetch whenever filters change.
+  useEffect(() => {
+    // Don't fetch on mount if we have initial data and default filters
+    // But we need to fetch if filters change
+    fetchCards();
+  }, [fetchCards]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedFilterQuery, selectedRarity, selectedColor]);
+
+
+  // Fetch full card data when selected (for adding)
   const handleSelectCard = async (cardName: string) => {
     setIsLoading(true);
     setCardNameInput(cardName);
@@ -111,15 +184,11 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
 
       if (response.ok) {
         const newCard = await response.json();
-        // Check if card already exists (update) or is new
-        const existingIndex = cards.findIndex(c => c.id === newCard.id);
-        if (existingIndex >= 0) {
-          const updatedCards = [...cards];
-          updatedCards[existingIndex] = newCard;
-          setCards(updatedCards);
-        } else {
-          setCards([newCard, ...cards]);
-        }
+        // Refresh the current view
+        fetchCards();
+        // Update total count
+        setTotalCards(prev => prev + 1); // Approximate, ideally fetch stats
+
         setSelectedCard(null);
         setCardNameInput('');
         setQuantity(1);
@@ -141,8 +210,9 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
       if (response.ok) {
         const data = await response.json();
         if (data.deleted) {
-          // Card was removed (quantity set to 0)
-          setCards(cards.filter(c => c.id !== cardId));
+          // Card was removed
+          fetchCards(); // Refresh to fill the gap
+          setTotalCards(prev => prev - 1);
         } else {
           // Card quantity updated
           setCards(cards.map(c => c.id === cardId ? data.card : c));
@@ -165,28 +235,13 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
       });
 
       if (response.ok) {
-        setCards(cards.filter(c => c.id !== cardId));
+        fetchCards(); // Refresh
+        setTotalCards(prev => prev - 1);
       }
     } catch (error) {
       console.error('Error deleting card:', error);
     }
   };
-
-  // Filter cards
-  const filteredCards = cards.filter((card) => {
-    const matchesSearch = card.name.toLowerCase().includes(filterQuery.toLowerCase());
-    const matchesRarity = selectedRarity === 'all' || card.rarity === selectedRarity;
-    const matchesColor =
-      selectedColor === 'all' ||
-      (selectedColor === 'colorless' && !card.colors) ||
-      card.colors?.includes(selectedColor);
-
-    return matchesSearch && matchesRarity && matchesColor;
-  });
-
-  // Stats
-  const totalCards = cards.reduce((sum, card) => sum + card.quantity, 0);
-  const uniqueCards = cards.length;
 
   return (
     <div className="container mx-auto max-w-7xl space-y-6">
@@ -202,10 +257,7 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
                 <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{totalCards}</span>
                 <span className="text-sm text-purple-700 dark:text-purple-300">total cards</span>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-indigo-100 dark:bg-indigo-950 rounded-full">
-                <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{uniqueCards}</span>
-                <span className="text-sm text-indigo-700 dark:text-indigo-300">unique cards</span>
-              </div>
+              {/* Unique cards count is same as total cards in this schema currently */}
             </div>
           </div>
         </div>
@@ -373,99 +425,131 @@ export default function CollectionClient({ initialCards }: { initialCards: UserC
           </Card>
 
           {/* Card Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredCards.map((card) => (
-              <Card key={card.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-purple-500/50">
-                {card.imageUrl && (
-                  <div className="relative h-48 w-full bg-muted overflow-hidden">
-                    <img
-                      src={card.imageUrl}
-                      alt={card.name}
-                      className="object-contain w-full h-full group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                )}
-                <CardHeader>
-                  <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">{card.name}</CardTitle>
-                  <CardDescription>{card.type_line}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Mana Cost:</span>
-                    <span className="font-mono font-semibold">{card.manaCost || 'N/A'}</span>
-                  </div>
-                  {card.power && card.toughness && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">P/T:</span>
-                      <span className="font-semibold">
-                        {card.power}/{card.toughness}
-                      </span>
+          <div className="relative min-h-[400px]">
+            {isFetching && (
+              <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {cards.map((card) => (
+                <Card key={card.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 hover:scale-[1.02] border-2 hover:border-purple-500/50">
+                  {card.imageUrl && (
+                    <div className="relative h-48 w-full bg-muted overflow-hidden">
+                      <img
+                        src={card.imageUrl}
+                        alt={card.name}
+                        className="object-contain w-full h-full group-hover:scale-110 transition-transform duration-300"
+                      />
                     </div>
                   )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Set:</span>
-                    <span className="text-xs">{card.setName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm items-center">
-                    <span className="text-muted-foreground">Rarity:</span>
-                    <span className={`capitalize px-2 py-1 rounded-full text-xs font-medium ${
-                      card.rarity === 'mythic' ? 'bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300' :
-                      card.rarity === 'rare' ? 'bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300' :
-                      card.rarity === 'uncommon' ? 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300' :
-                      'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {card.rarity}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t">
-                    <span className="text-sm text-muted-foreground">Quantity:</span>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUpdateQuantity(card.id, Math.max(0, card.quantity - 1))}
-                        disabled={card.quantity <= 0}
-                      >
-                        −
-                      </Button>
-                      <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 w-12 text-center">
-                        {card.quantity}x
+                  <CardHeader>
+                    <CardTitle className="text-lg group-hover:text-purple-600 transition-colors">{card.name}</CardTitle>
+                    <CardDescription>{card.type_line}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Mana Cost:</span>
+                      <span className="font-mono font-semibold">{card.manaCost || 'N/A'}</span>
+                    </div>
+                    {card.power && card.toughness && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">P/T:</span>
+                        <span className="font-semibold">
+                          {card.power}/{card.toughness}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Set:</span>
+                      <span className="text-xs">{card.setName}</span>
+                    </div>
+                    <div className="flex justify-between text-sm items-center">
+                      <span className="text-muted-foreground">Rarity:</span>
+                      <span className={`capitalize px-2 py-1 rounded-full text-xs font-medium ${card.rarity === 'mythic' ? 'bg-orange-100 dark:bg-orange-950 text-orange-700 dark:text-orange-300' :
+                        card.rarity === 'rare' ? 'bg-yellow-100 dark:bg-yellow-950 text-yellow-700 dark:text-yellow-300' :
+                          card.rarity === 'uncommon' ? 'bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300' :
+                            'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400'
+                        }`}>
+                        {card.rarity}
                       </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t">
+                      <span className="text-sm text-muted-foreground">Quantity:</span>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateQuantity(card.id, Math.max(0, card.quantity - 1))}
+                          disabled={card.quantity <= 0}
+                        >
+                          −
+                        </Button>
+                        <span className="text-2xl font-bold text-purple-600 dark:text-purple-400 w-12 text-center">
+                          {card.quantity}x
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleUpdateQuantity(card.id, card.quantity + 1)}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Card Actions */}
+                    <div className="flex gap-2 pt-2">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() => handleUpdateQuantity(card.id, card.quantity + 1)}
+                        className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                        onClick={() => handleDeleteCard(card.id, card.name)}
                       >
-                        +
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Remove
                       </Button>
                     </div>
-                  </div>
-                  
-                  {/* Card Actions */}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-                      onClick={() => handleDeleteCard(card.id, card.name)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Remove
-                    </Button>
-                  </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {cards.length === 0 && !isFetching && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">
+                    No cards found. {totalCards > 0 ? 'Try different filters.' : 'Add cards to your collection to get started!'}
+                  </p>
                 </CardContent>
               </Card>
-            ))}
+            )}
           </div>
 
-          {filteredCards.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">
-                  No cards found. {cards.length > 0 ? 'Try different filters.' : 'Add cards to your collection to get started!'}
-                </p>
-              </CardContent>
-            </Card>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-4 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || isFetching}
+              >
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
+              </Button>
+              <span className="text-sm font-medium">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || isFetching}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

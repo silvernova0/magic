@@ -50,33 +50,82 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
+    // Map UI strategy names to database strategy names
+    let normalizedStrategy = strategy.toLowerCase();
+    const strategyMap: Record<string, string> = {
+      'kindred': 'tribal',
+      'self mill': 'self_mill',
+      'go wide': 'go_wide',
+      'turbo fog': 'turbo_fog',
+      'hate bears': 'hate_bears',
+      'group hug': 'group_hug',
+      'group slug': 'group_slug',
+      'lands matter': 'lands_matter',
+      'superfriends': 'superfriends',
+    };
+    
+    normalizedStrategy = strategyMap[normalizedStrategy] || normalizedStrategy.replace(/\s+/g, '_');
+
     // Fetch user's collection if useCollectionOnly is true
     let userCollection: string[] = [];
     if (useCollectionOnly) {
       const collectionCards = await prisma.userCard.findMany({
         where: { userId: user.id },
-        select: { name: true, quantity: true },
+        select: { name: true, quantity: true, type_line: true },
       });
+
+      // Check minimum collection requirements
+      const totalCards = collectionCards.reduce((sum, card) => sum + card.quantity, 0);
+      const uniqueCards = collectionCards.length;
+      
+      // Count legendary creatures (potential commanders)
+      const legendaryCreatures = collectionCards.filter(card => {
+        const typeLine = card.type_line?.toLowerCase() || '';
+        return typeLine.includes('legendary') && typeLine.includes('creature');
+      });
+      const legendaryCount = legendaryCreatures.length;
+
+      // Minimum requirements: 10 legendary creatures, 500 total cards
+      const MIN_LEGENDARY = 10;
+      const MIN_TOTAL_CARDS = 500;
+
+      if (legendaryCount < MIN_LEGENDARY) {
+        return NextResponse.json({ 
+          error: `Collection needs at least ${MIN_LEGENDARY} legendary creatures to build from collection. You have ${legendaryCount}. Add more commanders to your collection.`,
+          details: {
+            legendaryCreatures: legendaryCount,
+            requiredLegendary: MIN_LEGENDARY,
+            totalCards: totalCards,
+            uniqueCards: uniqueCards,
+          }
+        }, { status: 400 });
+      }
+
+      if (totalCards < MIN_TOTAL_CARDS) {
+        return NextResponse.json({ 
+          error: `Collection needs at least ${MIN_TOTAL_CARDS} total cards to build from collection. You have ${totalCards}. Import more cards to your collection.`,
+          details: {
+            legendaryCreatures: legendaryCount,
+            totalCards: totalCards,
+            requiredTotal: MIN_TOTAL_CARDS,
+            uniqueCards: uniqueCards,
+          }
+        }, { status: 400 });
+      }
 
       // Flatten collection (include multiples of same card)
       userCollection = collectionCards.flatMap(card => 
         Array(card.quantity).fill(card.name)
       );
 
-      if (userCollection.length === 0) {
-        return NextResponse.json({ 
-          error: 'Your collection is empty. Please add cards before building from collection.' 
-        }, { status: 400 });
-      }
-
-      console.log(`Building deck from user collection (${userCollection.length} total cards, ${collectionCards.length} unique)`);
+      console.log(`Building deck from user collection (${totalCards} total cards, ${uniqueCards} unique, ${legendaryCount} legendary creatures)`);
     } else {
       console.log('Building deck from all available cards (collection checkbox unchecked)');
     }
 
     // Create v3 structured JSON for deck builder
     // Build strategy-specific card selection based on deck theme
-    const strategyLower = strategy.toLowerCase();
+    const strategyLower = normalizedStrategy.toLowerCase();
     
     // If no commander specified, pick one that matches colors and strategy
     let finalCommander = commander;
@@ -91,6 +140,13 @@ export async function POST(req: NextRequest) {
       // Find a commander that matches the colors and has good EDHREC rank
       const whereClause: any = {
         isCommander: true,
+        // Filter out playtest, arena-only, and illegal cards
+        setCode: {
+          notIn: ['PLST', 'PLIST', 'PAST', 'PANA', 'PHTR', 'PPRO', 'PRED', 'PSAL', 'PTEST', 'PFAN'] // Playtest sets
+        },
+        legalities: {
+          contains: '"commander":"legal"' // Only Commander-legal cards
+        }
       };
       
       if (colorIdentity) {
@@ -98,20 +154,42 @@ export async function POST(req: NextRequest) {
       }
       
       // Try to find commander with strategy in name/oracle text
-      // Note: SQLite's LIKE is case-insensitive by default, no mode option needed
-      let candidateCommanders = await prisma.card.findMany({
-        where: {
-          ...whereClause,
-          OR: [
-            { name: { contains: strategyLower } },
-            { oracleText: { contains: strategyLower } },
-          ],
-        },
-        orderBy: {
-          edhrecRank: 'asc', // Most popular first
-        },
-        take: 10,
-      });
+      // For tribal/kindred, search for the creature type (e.g., "elves", "dragons")
+      let candidateCommanders;
+      
+      // If strategy is "tribal" or "kindred", search for creature types
+      if (strategyLower === 'tribal' || strategyLower === 'kindred') {
+        // Search for common creature types in name or type line
+        const tribes = ['elf', 'dragon', 'zombie', 'goblin', 'merfolk', 'vampire', 'wizard', 'warrior', 'soldier', 'angel'];
+        candidateCommanders = await prisma.card.findMany({
+          where: {
+            ...whereClause,
+            OR: tribes.flatMap(tribe => [
+              { name: { contains: tribe } },
+              { typeLine: { contains: tribe } },
+            ]),
+          },
+          orderBy: {
+            edhrecRank: 'asc',
+          },
+          take: 10,
+        });
+      } else {
+        // Search for strategy in name/oracle text
+        candidateCommanders = await prisma.card.findMany({
+          where: {
+            ...whereClause,
+            OR: [
+              { name: { contains: strategyLower } },
+              { oracleText: { contains: strategyLower } },
+            ],
+          },
+          orderBy: {
+            edhrecRank: 'asc',
+          },
+          take: 10,
+        });
+      }
       
       // If no matches with strategy, just get popular commanders with matching colors
       if (candidateCommanders.length === 0) {

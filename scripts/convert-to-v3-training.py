@@ -129,56 +129,151 @@ def categorize_card(card_name: str) -> Set[str]:
     return categories
 
 def detect_strategy(deck_data: Dict) -> str:
-    """Detect deck strategy from card names and themes"""
+    """Detect deck strategy from commander, card names, and themes"""
     all_cards = deck_data.get('all_cards', [])
     themes = deck_data.get('themes', [])
+    commander = deck_data.get('commander', '').lower()
     
-    # Check themes first
+    # Combine all text for analysis
     themes_lower = ' '.join(themes).lower()
-    
-    if any(word in themes_lower for word in ['tribal', 'kindred', 'creature type']):
-        return 'tribal'
-    if any(word in themes_lower for word in ['combo', 'infinite']):
-        return 'combo'
-    if any(word in themes_lower for word in ['control', 'permission', 'counterspell']):
-        return 'control'
-    if any(word in themes_lower for word in ['aggro', 'weenie', 'go wide']):
-        return 'aggro'
-    if any(word in themes_lower for word in ['voltron', 'equipment', 'aura']):
-        return 'voltron'
-    if any(word in themes_lower for word in ['spell', 'instant', 'sorcery']):
-        return 'spellslinger'
-    if any(word in themes_lower for word in ['reanimator', 'graveyard']):
-        return 'reanimator'
-    if any(word in themes_lower for word in ['stax', 'lock', 'prison']):
-        return 'stax'
-    if any(word in themes_lower for word in ['aristocrats', 'sacrifice']):
-        return 'aristocrats'
-    if any(word in themes_lower for word in ['ramp', 'big creatures', 'stompy']):
-        return 'stompy'
-    
-    # Analyze card composition
     card_names_lower = ' '.join(all_cards).lower()
     
-    # Count strategy indicators
+    # Count card types in deck
+    categories = deck_data.get('categories', {})
+    type_counts = defaultdict(int)
+    for cat_name, cat_data in categories.items():
+        cat_lower = cat_name.lower()
+        count = cat_data.get('count', 0)
+        if 'artifact' in cat_lower:
+            type_counts['artifacts'] += count
+        elif 'enchantment' in cat_lower:
+            type_counts['enchantments'] += count
+        elif 'instant' in cat_lower:
+            type_counts['instants'] += count
+        elif 'sorcery' in cat_lower:
+            type_counts['sorceries'] += count
+        elif 'planeswalker' in cat_lower:
+            type_counts['planeswalkers'] += count
+    
     strategy_score = defaultdict(int)
     
-    # Tribal indicators
-    creature_types = ['dragon', 'elf', 'goblin', 'zombie', 'vampire', 'angel', 'demon', 'wizard', 'soldier', 'merfolk']
+    # Check commander-specific strategies
+    mill_commanders = ['phenax', 'bruvac', 'hope estheim', 'zellix', 'anowon', 'mirko vosk']
+    if any(cmd in commander for cmd in mill_commanders):
+        strategy_score['mill'] += 20
+    
+    lifegain_commanders = ['oloro', 'karlov', 'heliod', 'lathiel', 'trostani']
+    if any(cmd in commander for cmd in lifegain_commanders) or 'hope estheim' in commander:
+        strategy_score['lifegain'] += 20
+    
+    spellslinger_commanders = ['talrand', 'niv-mizzet', 'mizzix', 'kess', 'veyran', 'vadrik', 'vivi ornitier']
+    if any(cmd in commander for cmd in spellslinger_commanders):
+        strategy_score['spellslinger'] += 20
+    
+    artifact_commanders = ['urza', 'breya', 'jhoira', 'osgir', 'alibou', 'aloy', 'raul']
+    if any(cmd in commander for cmd in artifact_commanders):
+        strategy_score['artifacts'] += 20
+    
+    enchantment_commanders = ['sythis', 'tuvasa', 'estrid', 'go-shintai', 'daxos']
+    if any(cmd in commander for cmd in enchantment_commanders):
+        strategy_score['enchantments'] += 20
+    
+    superfriends_commanders = ['atraxa', 'carth', 'aminatou', 'kyodai', 'commodore guff']
+    if any(cmd in commander for cmd in superfriends_commanders):
+        strategy_score['superfriends'] += 20
+    
+    voltron_commanders = ['uril', 'rafiq', 'sram', 'valduk', 'wyleth', 'galea']
+    if any(cmd in commander for cmd in voltron_commanders):
+        strategy_score['voltron'] += 20
+    
+    # Check themes
+    if any(word in themes_lower for word in ['tribal', 'kindred', 'creature type']):
+        strategy_score['tribal'] += 15
+    if any(word in themes_lower for word in ['combo', 'infinite']):
+        strategy_score['combo'] += 15
+    if any(word in themes_lower for word in ['control', 'permission', 'counterspell']):
+        strategy_score['control'] += 15
+    if any(word in themes_lower for word in ['aggro', 'weenie']):
+        strategy_score['aggro'] += 15
+    if any(word in themes_lower for word in ['voltron', 'equipment', 'aura']):
+        strategy_score['voltron'] += 15
+    if any(word in themes_lower for word in ['spell', 'instant', 'sorcery', 'spellslinger']):
+        strategy_score['spellslinger'] += 15
+    if any(word in themes_lower for word in ['reanimator', 'graveyard']):
+        strategy_score['reanimator'] += 15
+    if any(word in themes_lower for word in ['stax', 'lock', 'prison']):
+        strategy_score['stax'] += 15
+    if any(word in themes_lower for word in ['aristocrats', 'sacrifice']):
+        strategy_score['aristocrats'] += 15
+    if any(word in themes_lower for word in ['tokens', 'token']):
+        strategy_score['tokens'] += 15
+    if any(word in themes_lower for word in ['life gain', 'lifegain']):
+        strategy_score['lifegain'] += 15
+    if any(word in themes_lower for word in ['mill']):
+        strategy_score['mill'] += 15
+    if any(word in themes_lower for word in ['group hug', 'hug']):
+        strategy_score['group_hug'] += 15
+    if any(word in themes_lower for word in ['group slug', 'slug', 'punish']):
+        strategy_score['group_slug'] += 15
+    if any(word in themes_lower for word in ['lands matter', 'landfall']):
+        strategy_score['lands_matter'] += 15
+    if any(word in themes_lower for word in ['artifacts', 'artifact']):
+        strategy_score['artifacts'] += 15
+    if any(word in themes_lower for word in ['enchantments', 'enchantress']):
+        strategy_score['enchantments'] += 15
+    if any(word in themes_lower for word in ['superfriends', 'planeswalker']):
+        strategy_score['superfriends'] += 15
+    if any(word in themes_lower for word in ['discard']):
+        strategy_score['discard'] += 15
+    if any(word in themes_lower for word in ['pillowfort', 'pillow fort']):
+        strategy_score['pillowfort'] += 15
+    if any(word in themes_lower for word in ['hatebears', 'hate bears', 'death & taxes']):
+        strategy_score['hate_bears'] += 15
+    if any(word in themes_lower for word in ['infect', 'poison']):
+        strategy_score['infect'] += 15
+    if any(word in themes_lower for word in ['wheels', 'wheel']):
+        strategy_score['wheels'] += 15
+    
+    # Analyze card type composition
+    total_nonland = sum(type_counts.values())
+    if total_nonland > 20:
+        if type_counts['instants'] + type_counts['sorceries'] >= 25:
+            strategy_score['spellslinger'] += 10
+        if type_counts['artifacts'] >= 20:
+            strategy_score['artifacts'] += 10
+        if type_counts['enchantments'] >= 20:
+            strategy_score['enchantments'] += 10
+        if type_counts['planeswalkers'] >= 10:
+            strategy_score['superfriends'] += 10
+    
+    # Check for specific card indicators
+    # Tribal
+    creature_types = ['dragon', 'elf', 'goblin', 'zombie', 'vampire', 'angel', 'demon', 'wizard', 'soldier', 'merfolk', 'knight', 'spirit']
     for ctype in creature_types:
-        if card_names_lower.count(ctype) >= 5:
+        if card_names_lower.count(ctype) >= 8:
             strategy_score['tribal'] += 10
             break
     
-    # Combo indicators
-    if 'infinite' in themes_lower or any(combo in card_names_lower for combo in ['thassa\'s oracle', 'thoracle', 'consultation', 'worldgorger']):
+    # Combo
+    combo_cards = ['thassa\'s oracle', 'thoracle', 'consultation', 'worldgorger', 'dramatic reversal', 'isochron scepter', 'palinchron']
+    if any(combo in card_names_lower for combo in combo_cards):
         strategy_score['combo'] += 10
     
-    # Default to balanced midrange
-    if not strategy_score:
-        return 'midrange'
+    # Aristocrats
+    aristocrat_cards = ['blood artist', 'zulaport cutthroat', 'cruel celebrant', 'viscera seer', 'ashnod\'s altar']
+    if sum(1 for card in aristocrat_cards if card in card_names_lower) >= 2:
+        strategy_score['aristocrats'] += 10
     
-    return max(strategy_score.items(), key=lambda x: x[1])[0]
+    # Tokens
+    token_cards = ['anointed procession', 'doubling season', 'parallel lives', 'divine visitation']
+    if any(token in card_names_lower for token in token_cards):
+        strategy_score['tokens'] += 10
+    
+    # Return highest scoring strategy, or midrange if none score well
+    if strategy_score:
+        return max(strategy_score.items(), key=lambda x: x[1])[0]
+    
+    return 'midrange'
 
 def estimate_power_level(deck_data: Dict, strategy: str) -> tuple:
     """Estimate power level (1-10) and bracket (1-5) from deck composition"""
@@ -395,8 +490,88 @@ def create_v3_training_example(deck_data: Dict, source: str) -> Dict:
         ]
     }
     
-    # Strategy-specific cards
-    if strategy == 'tribal' and tribe:
+    # Strategy-specific card type allocations
+    if strategy == 'spellslinger':
+        # Spellslinger decks are spell-heavy, not creature-heavy
+        instant_count = distribution.get('instants', 20)
+        sorcery_count = distribution.get('sorceries', 15)
+        creature_count = max(10, distribution.get('creatures', 12))
+        
+        card_selection['instants'] = {
+            'count': instant_count,
+            'filters': [
+                {'types': ['Instant'], 'reason': 'Spell triggers and interaction'}
+            ]
+        }
+        card_selection['sorceries'] = {
+            'count': sorcery_count,
+            'filters': [
+                {'types': ['Sorcery'], 'reason': 'Spell triggers and value'}
+            ]
+        }
+        card_selection['creatures'] = {
+            'count': creature_count,
+            'filters': [
+                {'types': ['Creature'], 'reason': 'Spell payoffs like Talrand, Young Pyromancer'}
+            ]
+        }
+    
+    elif strategy == 'artifacts':
+        # Artifact decks need lots of artifacts, fewer creatures
+        artifact_count = distribution.get('artifacts', 25)
+        creature_count = max(10, distribution.get('creatures', 15))
+        
+        card_selection['artifacts'] = {
+            'count': artifact_count,
+            'filters': [
+                {'types': ['Artifact'], 'reason': 'Artifact synergies and value'}
+            ]
+        }
+        card_selection['creatures'] = {
+            'count': creature_count,
+            'filters': [
+                {'types': ['Creature'], 'reason': 'Artifact payoffs and synergy creatures'}
+            ]
+        }
+    
+    elif strategy == 'enchantments':
+        # Enchantment decks (enchantress) need lots of enchantments
+        enchantment_count = distribution.get('enchantments', 25)
+        creature_count = max(10, distribution.get('creatures', 15))
+        
+        card_selection['enchantments'] = {
+            'count': enchantment_count,
+            'filters': [
+                {'types': ['Enchantment'], 'reason': 'Enchantress triggers and value'}
+            ]
+        }
+        card_selection['creatures'] = {
+            'count': creature_count,
+            'filters': [
+                {'types': ['Creature'], 'reason': 'Enchantress effects and constellation triggers'}
+            ]
+        }
+    
+    elif strategy == 'superfriends':
+        # Planeswalker decks need lots of planeswalkers
+        planeswalker_count = distribution.get('planeswalkers', 15)
+        creature_count = max(10, distribution.get('creatures', 18))
+        
+        card_selection['planeswalkers'] = {
+            'count': planeswalker_count,
+            'filters': [
+                {'types': ['Planeswalker'], 'reason': 'Planeswalker synergies and value'}
+            ]
+        }
+        card_selection['creatures'] = {
+            'count': creature_count,
+            'filters': [
+                {'types': ['Creature'], 'reason': 'Planeswalker protection and proliferate'}
+            ]
+        }
+    
+    # Creatures (ALWAYS include - critical for deck completion)
+    elif strategy == 'tribal' and tribe:
         creature_count = distribution.get('creatures', 25)
         card_selection['creatures'] = {
             'count': creature_count,
@@ -404,12 +579,50 @@ def create_v3_training_example(deck_data: Dict, source: str) -> Dict:
                 {'types': ['Creature'], 'subtypes': [tribe], 'reason': f'{tribe} tribal synergy'}
             ]
         }
+    else:
+        # Non-tribal: creatures based on strategy
+        creature_count = distribution.get('creatures', 25)
+        filters = [{'types': ['Creature']}]
+        if strategy == 'combo':
+            filters[0]['reason'] = 'Combo pieces and value creatures'
+        elif strategy == 'control':
+            filters[0]['reason'] = 'Defensive creatures and win conditions'
+        elif strategy == 'aggro':
+            filters[0]['reason'] = 'Aggressive threats'
+        else:  # midrange, ramp, etc
+            filters[0]['reason'] = 'Threats and value creatures'
+        
+        card_selection['creatures'] = {
+            'count': creature_count,
+            'filters': filters
+        }
     
-    # Priority cards (first 5-10 cards from deck)
+    # CRITICAL: Normalize to exactly 99 cards
+    current_total = sum(spec.get('count', 0) for spec in card_selection.values() if isinstance(spec, dict))
+    
+    if current_total != 99:
+        # Adjust creatures count to reach exactly 99
+        creature_adjustment = 99 - current_total
+        card_selection['creatures']['count'] = max(15, card_selection['creatures']['count'] + creature_adjustment)
+        
+        # Verify the fix
+        final_total = sum(spec.get('count', 0) for spec in card_selection.values() if isinstance(spec, dict))
+        if final_total != 99:
+            # Shouldn't happen, but fallback: adjust lands
+            card_selection['lands']['count'] += (99 - final_total)
+    
+    # Priority cards - sample across deck to capture key synergies
+    # Early cards (1-10) + spread sampling (10-60) catches both staples and commander-specific combos
     priority_cards = [commander]
     all_cards = deck_data.get('all_cards', [])
     if len(all_cards) > 1:
-        priority_cards.extend(all_cards[1:min(6, len(all_cards))])
+        # First 10 cards (early game staples, ramp, removal)
+        priority_cards.extend(all_cards[1:min(11, len(all_cards))])
+        # Every 5th card from position 10-60 (mid-game synergies, combos)
+        # This catches cards like Quicksilver Elemental (pos 55) for Vivi
+        for i in range(10, min(60, len(all_cards)), 5):
+            if all_cards[i] not in priority_cards:
+                priority_cards.append(all_cards[i])
     
     # Build output structure
     output = {
@@ -530,9 +743,14 @@ def main():
         ("edhrec_average_decks.jsonl", "EDHREC Average Decks"),
         ("mtggoldfish_by_commander_decks.jsonl", "MTGGoldfish Commander Decks"),
         ("moxfield_decks.jsonl", "Moxfield Theme Decks"),
+        ("tappedout_decks.jsonl", "TappedOut Decks"),
+        ("vehicle_commander_decks.jsonl", "Vehicle Commander Decks"),
+        ("mtggoldfish_advanced_decks.jsonl", "MTGGoldfish Advanced Decks"),
         ("archidekt_decks.jsonl", "Archidekt Popular Decks"),
         ("moxfield_decks_diverse.jsonl", "Moxfield Diverse Decks"),
         ("mtggoldfish_decks.jsonl", "MTGGoldfish Archetype Decks"),
+        ("precon_decks.jsonl", "Preconstructed Decks"),
+        ("edhtop16_tournament_decks.jsonl", "EDHTop16 Tournament Decks"),
     ]
     
     all_examples = []

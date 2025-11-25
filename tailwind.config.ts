@@ -7,10 +7,13 @@ const config = {
     './components/**/*.{ts,tsx}',
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
-	],
+  ],
   prefix: "",
   theme: {
     extend: {
+      fontFamily: {
+        serif: ["var(--font-cinzel)", "serif"],
+      },
       // ...existing theme extensions
     },
   },

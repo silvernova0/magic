@@ -1,0 +1,16 @@
+[Unit]
+Description=JankBuild API Server
+After=network.target
+
+[Service]
+Type=simple
+User=social
+WorkingDirectory=/home/social/magicapp
+ExecStart=/home/social/.virtualenvs/magicapp/bin/python /home/social/magicapp/scripts/active/pipeline/api-server.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/social/magicapp/logs/api-server.log
+StandardError=append:/home/social/magicapp/logs/api-server.log
+
+[Install]
+WantedBy=multi-user.target

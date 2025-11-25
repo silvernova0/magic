@@ -86,6 +86,11 @@ function LoginForm() {
                 disabled={isLoading}
               />
             </div>
+            <div className="flex justify-end">
+              <Link href="/forgot-password" className="text-sm text-blue-500 hover:underline">
+                Forgot Password?
+              </Link>
+            </div>
             {success && (
               <div className="text-sm text-green-500 text-center">{success}</div>
             )}

@@ -110,11 +110,18 @@ async function importAtomicCards(filePath: string): Promise<void> {
           .map((card) => {
 
           // Check if card can be commander
-          const isCommander = 
-            card.leadership?.commander === true ||
-            card.isCommander === true ||
-            card.text?.toLowerCase().includes('can be your commander') ||
-            false;
+          // Valid commanders:
+          // - Legendary Creatures (including Artifact Creatures)
+          // - Legendary Artifact - Vehicle (e.g., Parhelion II)
+          // - Cards with "can be your commander" text (e.g., planeswalkers)
+          // NOT valid:
+          // - Regular Legendary Artifacts (e.g., The One Ring)
+          const typeLine = card.type || '';
+          const isLegendaryCreature = typeLine.includes('Legendary') && typeLine.includes('Creature');
+          const isLegendaryVehicle = typeLine.includes('Legendary') && typeLine.includes('Artifact') && typeLine.includes('Vehicle');
+          const hasCommanderText = card.text?.toLowerCase().includes('can be your commander') || false;
+          
+          const isCommander = isLegendaryCreature || isLegendaryVehicle || hasCommanderText;
 
           // Generate a unique ID (use card name as base)
           const cardId = card.name.toLowerCase().replace(/[^a-z0-9]/g, '-');

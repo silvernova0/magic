@@ -1,0 +1,247 @@
+Loading structure from generated_decks/temp/cmh3e3tnd0002mc68b0w8u5yj-1764017922998.json...
+DEBUG: CWD is /home/social/magicapp
+DEBUG: Opening DB at /home/social/magicapp/prisma/dev.db
+📊 Loaded deck statistics from data/deck_stats.json
+✅ Connected to database: /home/social/magicapp/prisma/dev.db
+
+======================================================================
+Building deck: Commander Mustard
+Strategy: kindred_-_soldiers
+Power Level: 3
+======================================================================
+
+   ⚔️  Tribal Strategy Detected: Enforcing 'Soldier' for priority creatures
+🎨 Using provided color restrictions: {'R', 'W'}
+🎨 Commander Color Identity: Red, White (R/W)
+
+📊 MODEL CARD ALLOCATION:
+   artifacts: 28 cards
+   creatures: 50 cards
+   enchantments: 16 cards
+   instants: 1 cards
+   lands: 35 cards
+   sorceries: 1 cards
+   ==================================================
+   TOTAL: 131 cards (target: 99)
+
+⚠️  WARNING: Model allocated 131/99 cards - will trim extras!
+
+
+======================================================================
+PHASE 1: Querying non-land cards to analyze mana requirements
+======================================================================
+
+   🔎 Processing creatures (count: 50) with filters: [{'tags': ['creature'], 'subtypes': ['Soldier'], 'reason': 'Accelerate gameplan with soldier creatures'}, {'tags': ['combat', 'removal'], 'reason': 'Answer threats and respond to dangers'}]
+🔍 creatures: requesting 50 cards...
+      ❌ Rejected Professional Face-Breaker (Not a Soldier)
+      ❌ Rejected Enduring Innocence (Not a Soldier)
+      ❌ Rejected Coruscation Mage (Not a Soldier)
+      ❌ Rejected Guttersnipe (Not a Soldier)
+      ❌ Rejected Archon of Sun's Grace (Not a Soldier)
+      ❌ Rejected Ulamog, the Infinite Gyre (Not a Soldier)
+      ❌ Rejected Adeline, Resplendent Cathar (Not a Soldier)
+      ❌ Rejected Ulamog, the Ceaseless Hunger (Not a Soldier)
+      ❌ Rejected Ojer Taq, Deepest Foundation // Temple of Civilization (Not a Soldier)
+      ❌ Rejected Witty Roastmaster (Not a Soldier)
+      ❌ Rejected Captain Lannery Storm (Not a Soldier)
+      ❌ Rejected Elesh Norn, Mother of Machines (Not a Soldier)
+      ❌ Rejected Loran of the Third Path (Not a Soldier)
+      ❌ Rejected Gisela, Blade of Goldnight (Not a Soldier)
+      ❌ Rejected Kozilek, the Great Distortion (Not a Soldier)
+      ❌ Rejected Firebrand Archer (Not a Soldier)
+      ❌ Rejected Cavern-Hoard Dragon (Not a Soldier)
+      ❌ Rejected Wurmcoil Engine (Not a Soldier)
+      ❌ Rejected Combustible Gearhulk (Not a Soldier)
+      ❌ Rejected Purphoros, God of the Forge (Not a Soldier)
+      ❌ Rejected Avacyn, Angel of Hope (Not a Soldier)
+      ❌ Rejected Balefire Dragon (Not a Soldier)
+      ❌ Rejected Krenko, Tin Street Kingpin (Not a Soldier)
+      ❌ Rejected Walking Ballista (Not a Soldier)
+      ❌ Rejected Meteor Golem (Not a Soldier)
+   ✅ Added 25 cards to creatures
+   🔎 Processing instants (count: 1) with filters: [{'tags': ['instant'], 'reason': 'Instant speed triggers'}]
+🔍 instants: requesting 1 cards...
+   ✅ Added 0 cards to instants
+   🔎 Processing sorceries (count: 1) with filters: [{'tags': ['sorcery'], 'reason': 'Sorcery speed milestones'}]
+🔍 sorceries: requesting 1 cards...
+   ✅ Added 0 cards to sorceries
+   🔎 Processing artifacts (count: 28) with filters: [{'tags': ['artifact'], 'reason': 'Artifact magic augment abilities'}]
+🔍 artifacts: requesting 28 cards...
+   📊 Found 80 total, 5 already used, 75 available
+      ❌ Rejected Roaming Throne (Not a Soldier)
+      ❌ Rejected Foundry Inspector (Not a Soldier)
+      ❌ Rejected Psychosis Crawler (Not a Soldier)
+      ❌ Rejected Ornithopter of Paradise (Not a Soldier)
+   ✅ Added 24 cards to artifacts
+   🔎 Processing enchantments (count: 16) with filters: [{'tags': ['enchantment'], 'reason': 'Enchantress effects support strategy'}]
+🔍 enchantments: requesting 16 cards...
+   📊 Found 43 total, 7 already used, 36 available
+   ✅ Added 16 cards to enchantments
+DEBUG: deck_cards size after Phase 1: 65
+
+======================================================================
+PHASE 2: Analyzing mana requirements
+======================================================================
+
+
+======================================================================
+PHASE 3: Building mana base
+======================================================================
+
+📊 Using Commander Mustard training data (bracket 3): 34-34 lands (avg: 34.0, 10 samples)
+ℹ️  Model allocated 35 lands (slightly above historical max 34, allowing)
+ℹ️  Respecting high land allocation (35) for strategy/preference
+💰 Budget deck (bracket 3, power 3) - 15 basics, ~10 non-basics
+💎 15 basics (even distribution)
+🔍 Requesting 20 non-basic lands...
+   ✅ Added 20/20 non-basic lands
+DEBUG: deck_cards size after Non-Basics: 100
+   📊 Total lands: 35 (15 basics + 20 non-basics)
+
+🌟 Validating 20 priority cards...
+   ⚠️  Rejected Archangel of Tithes: Creature does not match tribal type 'Soldier'
+   ⚠️  Rejected Arid Mesa: Land produces/fetches off-color mana
+   ⚠️  Rejected Firebrand Archer: Creature does not match tribal type 'Soldier'
+   ⚠️  Rejected Goblin Cratermaker: Creature does not match tribal type 'Soldier'
+   ⚠️  Rejected Ornithopter: Creature does not match tribal type 'Soldier'
+   ✅ Intelligently inserting 12 priority cards...
+      🔄 Replacing Blade of Selves with Arcane Signet
+      🔄 Replacing Boromir, Warden of the Tower with Bastion Protector
+      🔄 Replacing Mountain with Battlefield Forge
+      🔄 Replacing Duelist's Heritage with Cathars' Crusade
+      🔄 Replacing Phyrexian Altar with Chromatic Lantern
+      🔄 Replacing Agatha's Soul Cauldron with Darksteel Ingot
+      🔄 Replacing Plains with Exotic Orchard
+      🔄 Replacing Idol of Oblivion with Fellwar Stone
+      🔄 Replacing Soul-Guide Lantern with Jeweled Amulet
+      🔄 Replacing Eldrazi Monument with Mox Amber
+      🔄 Replacing Mountain with Sacred Foundry
+      🔄 Replacing Oketra's Monument with Sol Ring
+   📊 12 cards replaced, 0 cards added
+DEBUG: deck_cards size after Priority: 100
+⚠️  WARNING: Adding 28 basics will push land count to 63. Deck might be flooded.
+
+⚠️  Deck has 71 cards, need 28 more to reach 99
+   🛡️  Removed 2 high-power cards (Bracket 3)
+   📊 Current Non-Land Count: 63/63
+
+======================================================================
+PHASE 4: Synergy Injection
+======================================================================
+
+   🤷 No specific synergies found for current cards
+   📊 Using data-driven target for lands: 36 (Theme: kindred_-_soldiers)
+   📊 Current Lands: 6 (Non-basics: 4)
+   Build Land Base: Injecting 10 non-basic lands...
+   ✅ Injected 7 non-basic lands
+DEBUG: deck_cards size after Land Base: 76
+   ⚠️  Filled with 23 basic lands to reach 99
+☢️  Removed Command Tower // Command Tower during final sanitization
+
+======================================================================
+FINAL DECK:
+======================================================================
+
+Commander: Commander Mustard
+
+Deck Name: kindred_-_soldiers - Commander Mustard
+Strategy: kindred_-_soldiers
+Power Level: 3
+Bracket: 3
+
+Decklist:
+
+1x Aetherflux Reservoir
+1x Altar of Dementia
+1x Anointed Procession
+1x Arcane Signet
+1x Ashnod's Altar
+1x Authority of the Consuls
+1x Basalt Monolith
+1x Basilisk Collar
+1x Bastion Protector
+1x Battlefield Forge
+1x Blackblade Reforged
+1x Blind Obedience
+1x Boros Charm
+1x Cathars' Crusade
+1x Chromatic Lantern
+1x City on Fire
+1x Command Tower
+1x Commander's Sphere
+1x Darksteel Ingot
+1x Darksteel Mutation
+1x Delayed Blast Fireball
+1x Esper Sentinel
+1x Ethereal Armor
+1x Evolving Wilds
+1x Exotic Orchard
+1x Fellwar Stone
+1x Fiery Emancipation
+1x Fiery Inscription
+1x Fire Diamond
+1x Flowering of the White Tree
+1x Generous Gift
+1x Ghostly Prison
+1x Grasp of Fate
+1x Great Train Heist
+1x Hedron Archive
+1x Impact Tremors
+1x Intangible Virtue
+1x Jeweled Amulet
+1x Liquimetal Torque
+1x Maskwood Nexus
+1x Mithril Coat
+13x Mountain
+1x Mox Amber
+1x Myriad Landscape
+1x Panharmonicon
+1x Path of Ancestry
+12x Plains
+1x Reconnaissance
+1x Reliquary Tower
+1x Rogue's Passage
+1x Sacred Foundry
+1x Shadowspear
+1x Shared Animosity
+1x Shiny Impetus
+1x Sigarda's Aid
+1x Sol Ring
+1x Sphere of Safety
+1x Strionic Resonator
+1x Stroke of Midnight
+1x Sword of Feast and Famine
+1x Swords to Plowshares
+1x Temur Battle Rage
+1x Terramorphic Expanse
+1x The Ozolith
+1x Thran Dynamo
+1x Tocasia's Welcome
+1x Unbreakable Formation
+1x Untimely Malfunction
+1x Unwinding Clock
+1x Vandalblast
+1x Vanquisher's Banner
+1x Warleader's Call
+1x Warstorm Surge
+1x Wayfarer's Bauble
+1x Worn Powerstone
+
+Total: 99 cards
+
+💾 Deck saved to: generated_decks/v3_executed/cmh3e3tnd0002mc68b0w8u5yj-1764017922998_deck.txt
+
+======================================================================
+DECK BREAKDOWN BY TYPE:
+======================================================================
+Commander: 1x Commander Mustard
+Creatures: 2
+Instants: 9
+Sorceries: 1
+Artifacts: 29
+Enchantments: 22
+Lands: 35
+Total: 99 cards (including commander)
+======================================================================
+
+💾 JSON saved to: generated_decks/v3_executed/cmh3e3tnd0002mc68b0w8u5yj-1764017922998_deck.json

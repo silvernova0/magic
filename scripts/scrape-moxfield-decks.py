@@ -24,7 +24,7 @@ class MoxfieldScraper:
             'Origin': 'https://www.moxfield.com'
         })
     
-    def search_commander_decks(self, page=1, page_size=100):
+    def search_commander_decks(self, page=1, page_size=100, sort_type='views', sort_direction='Descending'):
         """Search for public Commander decks via Moxfield API"""
         try:
             url = f'{self.api_base}/decks/search'
@@ -33,8 +33,8 @@ class MoxfieldScraper:
                 'fmt': 'commander',  # Commander format
                 'pageNumber': page,
                 'pageSize': page_size,
-                'sortType': 'views',  # Sort by popularity
-                'sortDirection': 'Descending',
+                'sortType': sort_type,  # Configurable: 'views', 'updated', 'created'
+                'sortDirection': sort_direction,
                 'board': 'mainboard',
                 'visibility': 'public'
             }
@@ -126,6 +126,7 @@ class MoxfieldScraper:
             views = deck_data.get('viewCount', 0)
             likes = deck_data.get('likeCount', 0)
             comments = deck_data.get('commentCount', 0)
+            updated_at = deck_data.get('lastUpdatedAt', '')
             
             return {
                 'commander': commander_name,
@@ -139,6 +140,7 @@ class MoxfieldScraper:
                     'views': views,
                     'likes': likes,
                     'comments': comments,
+                    'updated_at': updated_at,
                     'quality_score': views + (likes * 10)  # Weighted quality
                 }
             }
@@ -185,13 +187,16 @@ class MoxfieldScraper:
         
         return 'General'
     
-    def scrape_decks(self, num_decks=2000, min_quality=100):
+    def scrape_decks(self, num_decks=2000, min_quality=100, min_date=None, sort_by='views'):
         """Main scraping function"""
         print(f"\n{'='*60}")
         print(f"MOXFIELD DECK SCRAPER")
         print(f"{'='*60}")
         print(f"Target: {num_decks} Commander decklists")
-        print(f"Min quality score: {min_quality}\n")
+        print(f"Min quality score: {min_quality}")
+        if min_date:
+            print(f"Min date: {min_date}")
+        print(f"Sort by: {sort_by}\n")
         
         decks = []
         page = 1
@@ -202,7 +207,7 @@ class MoxfieldScraper:
             print(f"\nFetching page {page}...")
             
             # Search for decks
-            search_results = self.search_commander_decks(page=page, page_size=100)
+            search_results = self.search_commander_decks(page=page, page_size=100, sort_type=sort_by)
             
             if not search_results:
                 print("No more decks found")
@@ -212,6 +217,23 @@ class MoxfieldScraper:
             for result in search_results:
                 if len(decks) >= num_decks:
                     break
+                
+                # Check date limit if enabled
+                if min_date:
+                    updated_str = result.get('lastUpdatedAt')
+                    if updated_str:
+                        try:
+                            # Handle ISO format with Z
+                            updated_str = updated_str.replace('Z', '+00:00')
+                            deck_date = datetime.fromisoformat(updated_str)
+                            
+                            if deck_date < min_date:
+                                print(f"  🛑 Reached date limit: {deck_date.date()} < {min_date.date()}")
+                                # Save whatever we have and return
+                                self._save_progress(decks)
+                                return decks
+                        except ValueError:
+                            pass # Ignore date parse errors
                 
                 deck_id = result.get('publicId')
                 deck_name = result.get('name', 'Unknown')
@@ -234,12 +256,17 @@ class MoxfieldScraper:
                     print(f"    ✗ Failed to parse")
                     continue
                 
-                # Quality filter
+                # Quality filter (only apply if we are sorting by views, otherwise we might skip recent good decks)
+                # If sorting by updated, we might want to lower the quality threshold or ignore it
                 quality = parsed['metadata']['quality_score']
-                if quality < min_quality:
+                if sort_by == 'views' and quality < min_quality:
                     skipped += 1
                     print(f"    ⊘ Skipped (quality: {quality})")
                     continue
+                elif sort_by == 'updated' and quality < 10: # Minimal quality for new decks
+                     skipped += 1
+                     print(f"    ⊘ Skipped (low quality new deck: {quality})")
+                     continue
                 
                 # Validate deck
                 if len(parsed['cards']) < 80:  # Should be close to 100

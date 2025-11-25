@@ -10,6 +10,20 @@ import { createWriteStream, createReadStream, unlinkSync, readFileSync } from 'f
 import { createInterface } from 'readline';
 import path from 'path';
 
+// Polyfill File for Node 18/undici compatibility
+if (typeof global.File === 'undefined') {
+  class File extends Blob {
+    name: string;
+    lastModified: number;
+    constructor(fileBits: BlobPart[], fileName: string, options?: FilePropertyBag) {
+      super(fileBits, options);
+      this.name = fileName;
+      this.lastModified = options?.lastModified || Date.now();
+    }
+  }
+  (global as any).File = File;
+}
+
 const prisma = new PrismaClient();
 
 interface ScryfallCard {
@@ -45,47 +59,61 @@ interface ScryfallCard {
  */
 async function downloadBulkData(): Promise<string> {
   console.log('Fetching Scryfall bulk data info...');
-  
-  // Get bulk data download URL
-  const bulkDataResponse = await fetch('https://api.scryfall.com/bulk-data');
-  const bulkData = await bulkDataResponse.json();
-  
+
+  console.log('Fetching Scryfall bulk data info...');
+
+  // Get bulk data download URL using https instead of fetch to avoid Node 18 issues
+  const bulkData = await new Promise<any>((resolve, reject) => {
+    https.get('https://api.scryfall.com/bulk-data', { headers: { 'User-Agent': 'MagicApp/1.0' } }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+      res.on('error', reject);
+    });
+  });
+
   // Find the "Default Cards" bulk data (all game cards)
   const defaultCards = bulkData.data.find(
     (item: any) => item.type === 'default_cards'
   );
-  
+
   if (!defaultCards) {
     throw new Error('Could not find default cards bulk data');
   }
-  
+
   const downloadUrl = defaultCards.download_uri;
   const fileSize = defaultCards.size;
-  
+
   console.log(`Downloading ${(fileSize / 1024 / 1024).toFixed(2)} MB from Scryfall...`);
   console.log(`URL: ${downloadUrl}`);
-  
+
   const filePath = path.join(process.cwd(), '.cache', 'scryfall-cards.json');
-  
+
   // Download file
   return new Promise((resolve, reject) => {
     https.get(downloadUrl, (response) => {
       const fileStream = createWriteStream(filePath);
       response.pipe(fileStream);
-      
+
       let downloaded = 0;
       response.on('data', (chunk) => {
         downloaded += chunk.length;
         const percent = ((downloaded / fileSize) * 100).toFixed(1);
         process.stdout.write(`\rDownloading... ${percent}%`);
       });
-      
+
       fileStream.on('finish', () => {
         fileStream.close();
         console.log('\nDownload complete!');
         resolve(filePath);
       });
-      
+
       fileStream.on('error', (err) => {
         unlinkSync(filePath);
         reject(err);
@@ -99,19 +127,19 @@ async function downloadBulkData(): Promise<string> {
  */
 async function importCards(filePath: string): Promise<void> {
   console.log('Reading and importing cards...');
-  
+
   const fileContent = readFileSync(filePath, 'utf-8');
   const cards: ScryfallCard[] = JSON.parse(fileContent);
-  
+
   console.log(`Found ${cards.length.toLocaleString()} cards to import`);
-  
+
   let imported = 0;
   let skipped = 0;
   const batchSize = 100;
-  
+
   for (let i = 0; i < cards.length; i += batchSize) {
     const batch = cards.slice(i, i + batchSize);
-    
+
     try {
       await prisma.$transaction(
         batch.map((card) => {
@@ -124,13 +152,13 @@ async function importCards(filePath: string): Promise<void> {
             skipped++;
             return prisma.$queryRaw`SELECT 1`; // No-op
           }
-          
+
           // Determine if card can be a commander
-          const isCommander = 
+          const isCommander =
             card.type_line.includes('Legendary') &&
             card.type_line.includes('Creature') &&
             card.legalities.commander === 'legal';
-          
+
           return prisma.card.upsert({
             where: { id: card.id },
             create: {
@@ -182,7 +210,7 @@ async function importCards(filePath: string): Promise<void> {
           });
         })
       );
-      
+
       imported += batch.length - (skipped - imported);
       const percent = ((i / cards.length) * 100).toFixed(1);
       process.stdout.write(`\rImporting... ${percent}% (${imported.toLocaleString()} cards)`);
@@ -190,7 +218,7 @@ async function importCards(filePath: string): Promise<void> {
       console.error(`Error importing batch at index ${i}:`, error);
     }
   }
-  
+
   console.log(`\n✅ Import complete!`);
   console.log(`   Imported: ${imported.toLocaleString()} cards`);
   console.log(`   Skipped: ${skipped.toLocaleString()} non-playable cards`);
@@ -201,7 +229,7 @@ async function importCards(filePath: string): Promise<void> {
  */
 export async function importScryfallBulkData(): Promise<void> {
   const startTime = Date.now();
-  
+
   // Create scrape job record
   const job = await prisma.scrapeJob.create({
     data: {
@@ -209,19 +237,19 @@ export async function importScryfallBulkData(): Promise<void> {
       status: 'running',
     },
   });
-  
+
   try {
     // Download bulk data
     const filePath = await downloadBulkData();
-    
+
     // Import into database
     await importCards(filePath);
-    
+
     // Clean up file
     unlinkSync(filePath);
-    
+
     const duration = Date.now() - startTime;
-    
+
     // Update job status
     await prisma.scrapeJob.update({
       where: { id: job.id },
@@ -231,11 +259,11 @@ export async function importScryfallBulkData(): Promise<void> {
         duration,
       },
     });
-    
+
     console.log(`\n🎉 Scryfall import completed in ${(duration / 1000 / 60).toFixed(2)} minutes`);
   } catch (error) {
     console.error('❌ Import failed:', error);
-    
+
     await prisma.scrapeJob.update({
       where: { id: job.id },
       data: {
@@ -244,7 +272,7 @@ export async function importScryfallBulkData(): Promise<void> {
         completedAt: new Date(),
       },
     });
-    
+
     throw error;
   } finally {
     await prisma.$disconnect();

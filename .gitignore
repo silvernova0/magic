@@ -101,3 +101,16 @@ Thumbs.db
 
 # Artifacts (build artifacts from documentation)
 artifacts/
+
+# Card Images (local cache - multi-GB)
+public/card-images/
+.cache/
+
+# Training logs and temporary files
+training*.log
+moxfield*.log
+*.log
+
+# Temporary scripts
+scripts/*-temp.js
+scripts/*-temp.ts

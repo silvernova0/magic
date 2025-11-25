@@ -9,8 +9,10 @@ import { Deck } from '@prisma/client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Share2, Edit, Trash2, Download, Copy, Check } from 'lucide-react';
+import { Share2, Edit, Trash2, Download, Copy, Check, Play } from 'lucide-react';
 import { CardPreview } from '../CardPreview';
+import { PlaytestModal } from '@/components/playtest/PlaytestModal';
+import { getDeckCardCount } from '@/lib/deck-utils';
 
 interface DeckWithUser extends Deck {
   user: {
@@ -38,27 +40,13 @@ const getStatusBadgeColor = (status: string) => {
   }
 };
 
-const getDeckCardCount = (decklist: any) => {
-  if (!decklist || typeof decklist !== 'object') return 0;
-  
-  return (
-    (Array.isArray(decklist.commander) ? decklist.commander.length : 0) +
-    (Array.isArray(decklist.creatures) ? decklist.creatures.length : 0) +
-    (Array.isArray(decklist.instants) ? decklist.instants.length : 0) +
-    (Array.isArray(decklist.sorceries) ? decklist.sorceries.length : 0) +
-    (Array.isArray(decklist.artifacts) ? decklist.artifacts.length : 0) +
-    (Array.isArray(decklist.enchantments) ? decklist.enchantments.length : 0) +
-    (Array.isArray(decklist.planeswalkers) ? decklist.planeswalkers.length : 0) +
-    (Array.isArray(decklist.lands) ? decklist.lands.length : 0)
-  );
-};
-
 export default function DeckViewClient({ deck, isOwner }: Props) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPlaytestOpen, setIsPlaytestOpen] = useState(false);
 
-  const cardCount = getDeckCardCount(deck.decklist);
+  const cardCount = getDeckCardCount(deck);
   const isValidDeck = cardCount === 100;
 
   const handleShare = () => {
@@ -194,6 +182,15 @@ export default function DeckViewClient({ deck, isOwner }: Props) {
             {/* Action Buttons */}
             <div className="flex gap-2">
               <button
+                onClick={() => setIsPlaytestOpen(true)}
+                className="p-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors flex items-center gap-2"
+                title="Playtest (Goldfish)"
+              >
+                <Play className="w-5 h-5" />
+                <span className="hidden md:inline font-semibold">Playtest</span>
+              </button>
+
+              <button
                 onClick={handleShare}
                 className="p-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors"
                 title="Share deck"
@@ -265,7 +262,7 @@ export default function DeckViewClient({ deck, isOwner }: Props) {
         {/* Decklist */}
         <div className="bg-slate-900/50 backdrop-blur-xl border-2 border-purple-500/30 rounded-xl p-8">
           <h2 className="text-3xl font-bold text-purple-300 mb-6">Decklist</h2>
-          
+
           {decklist.commander && renderCardList(
             'Commander',
             Array.isArray(decklist.commander) ? decklist.commander : [decklist.commander]
@@ -279,6 +276,12 @@ export default function DeckViewClient({ deck, isOwner }: Props) {
           {renderCardList('Lands', decklist.lands)}
         </div>
       </div>
+
+      <PlaytestModal
+        isOpen={isPlaytestOpen}
+        onClose={() => setIsPlaytestOpen(false)}
+        deck={deck}
+      />
     </div>
   );
 }

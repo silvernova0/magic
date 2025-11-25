@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    
+
     // Search parameters
     const query = searchParams.get('q') || searchParams.get('name') || '';
     const colors = searchParams.get('colors')?.split(',').filter(Boolean) || [];
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: any = {};
-    
+
     if (query) {
       where.OR = [
         { name: { contains: query } },
@@ -40,20 +40,20 @@ export async function GET(request: NextRequest) {
         { typeLine: { contains: query } },
       ];
     }
-    
+
     if (colors.length > 0) {
       // Cards that contain ALL specified colors
       where.AND = colors.map(color => ({
         colors: { contains: color }
       }));
     }
-    
+
     if (colorIdentity.length > 0) {
       // Cards with EXACT color identity (for Commander)
       const ciString = colorIdentity.sort().join(',');
       where.colorIdentity = ciString;
     }
-    
+
     if (types.length > 0) {
       where.AND = [
         ...(where.AND || []),
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         }))
       ];
     }
-    
+
     if (keywords.length > 0) {
       where.AND = [
         ...(where.AND || []),
@@ -71,17 +71,17 @@ export async function GET(request: NextRequest) {
         }))
       ];
     }
-    
+
     if (minCmc !== undefined || maxCmc !== undefined) {
       where.cmc = {};
       if (minCmc !== undefined) where.cmc.gte = minCmc;
       if (maxCmc !== undefined) where.cmc.lte = maxCmc;
     }
-    
+
     if (isCommander) {
       where.isCommander = true;
     }
-    
+
     if (minEdhrecRank !== undefined || maxEdhrecRank !== undefined) {
       where.edhrecRank = { not: null };
       if (minEdhrecRank !== undefined) {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
         where.edhrecRank = { ...where.edhrecRank, lte: maxEdhrecRank };
       }
     }
-    
+
     if (minSaltiness !== undefined || maxSaltiness !== undefined) {
       where.edhrecSaltiness = { not: null };
       if (minSaltiness !== undefined) {
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
         where.edhrecSaltiness = { ...where.edhrecSaltiness, lte: maxSaltiness };
       }
     }
-    
+
     if (rarity) {
       where.rarity = rarity;
     }
@@ -151,20 +151,35 @@ export async function GET(request: NextRequest) {
           imageUris: true,
           prices: true,
         },
+        distinct: ['name'],
       }),
       prisma.card.count({ where }),
     ]);
 
     // Parse JSON fields and add computed properties
+    // Helper to parse array fields (JSON or CSV)
+    const parseArrayField = (field: string | null): string[] => {
+      if (!field) return [];
+      try {
+        // Try JSON first
+        const parsed = JSON.parse(field);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        // Not JSON, ignore
+      }
+      // Fallback to CSV
+      return field.split(',').map(s => s.trim()).filter(Boolean);
+    };
+
     const enhancedCards = cards.map((card: any) => {
-      const keywords = card.keywords?.split(',').filter(Boolean) || [];
-      const colors = card.colors?.split(',').filter(Boolean) || [];
-      const colorIdentity = card.colorIdentity?.split(',').filter(Boolean) || [];
-      
+      const keywords = parseArrayField(card.keywords);
+      const colors = parseArrayField(card.colors);
+      const colorIdentity = parseArrayField(card.colorIdentity);
+
       // Determine tags based on card properties
       const tags: string[] = [];
       const text = card.oracleText?.toLowerCase() || '';
-      
+
       if (text.includes('draw')) tags.push('card-draw');
       if (text.includes('tutor') || text.includes('search your library')) tags.push('tutor');
       if (text.includes('destroy')) tags.push('removal');
@@ -173,7 +188,7 @@ export async function GET(request: NextRequest) {
       if (text.includes('extra turn')) tags.push('extra-turns');
       if (card.edhrecSaltiness && card.edhrecSaltiness > 1.0) tags.push('high-salt');
       if (card.edhrecRank && card.edhrecRank < 500) tags.push('game-changer');
-      
+
       return {
         ...card,
         keywords,

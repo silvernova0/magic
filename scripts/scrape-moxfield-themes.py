@@ -32,6 +32,8 @@ PRIORITY_THEMES = [
     'Pillowfort',
     'Aristocrats',
     'Goodstuff',
+    'Turbo',  # Turbo Fog
+    'Hatebears',
     
     # Mechanical themes
     '+1/+1 Counters',
@@ -54,6 +56,7 @@ PRIORITY_THEMES = [
     'Life Gain',
     'Cascade',
     'Cycling',
+    'Discard',
     
     # Meta/Power labels
     'cEDH',

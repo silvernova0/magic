@@ -19,12 +19,13 @@ async function main() {
   console.log('     Manual Scraping Job Trigger');
   console.log('═══════════════════════════════════════════════════\n');
 
-  if (!jobType || !['edhrec', 'mtgtop8', 'moxfield', 'all'].includes(jobType)) {
+  if (!jobType || !['edhrec', 'mtgtop8', 'moxfield', 'scryfall', 'all'].includes(jobType)) {
     console.error('❌ Invalid job type!\n');
     console.log('Usage:');
     console.log('  npm run scrape:now -- edhrec');
     console.log('  npm run scrape:now -- mtgtop8');
     console.log('  npm run scrape:now -- moxfield');
+    console.log('  npm run scrape:now -- scryfall');
     console.log('  npm run scrape:now -- all\n');
     process.exit(1);
   }
@@ -32,20 +33,23 @@ async function main() {
   try {
     if (jobType === 'all') {
       console.log('🚀 Running all scraping jobs...\n');
-      
+
+      await runJobNow('scryfall'); // Run Scryfall first to get new cards
+      console.log('');
+
       await runJobNow('edhrec');
       console.log('');
-      
+
       await runJobNow('mtgtop8');
       console.log('');
-      
+
       await runJobNow('moxfield');
       console.log('');
-      
+
       console.log('✅ All jobs completed!\n');
     } else {
       console.log(`🚀 Running ${jobType} scraping job...\n`);
-      await runJobNow(jobType as 'edhrec' | 'mtgtop8' | 'moxfield');
+      await runJobNow(jobType as 'edhrec' | 'mtgtop8' | 'moxfield' | 'scryfall');
       console.log('');
     }
 
@@ -53,11 +57,12 @@ async function main() {
     console.log('📊 Job Statistics:\n');
     if (jobType === 'all') {
       const stats = await Promise.all([
+        getJobStats('scryfall'),
         getJobStats('edhrec'),
         getJobStats('mtgtop8'),
         getJobStats('moxfield'),
       ]);
-      
+
       stats.forEach(stat => {
         console.log(`${stat.jobType.toUpperCase()}:`);
         console.log(`  Total Runs: ${stat.totalRuns}`);

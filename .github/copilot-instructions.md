@@ -1,5 +1,13 @@
 # JankBuild - MTG Commander Deck Builder AI Instructions
 
+## Project Status (Updated Nov 18, 2025)
+
+**Current Training**: Qwen 2.5 3B v3 model in progress (~12-13 hours, completes ~7-8 PM)
+- **Major improvements**: Strategy-specific card types (spellslinger→instants/sorceries, artifacts→artifacts, enchantments→enchantments, superfriends→planeswalkers)
+- **Better strategy detection**: Commander-aware (Hope Estheim→mill, Talrand→spellslinger) + card composition analysis
+- **Dataset**: 29,152 examples with improved distribution (tokens: 1,701, aristocrats: 1,419, spellslinger: 382, artifacts: 304, superfriends: 264)
+- **Previous issue**: Old model generated 45 creatures for spellslinger decks instead of 35 instants/sorceries
+
 ## Project Architecture
 
 **Hybrid AI System**: Combines Google Gemini API (primary) with local fine-tuned LLM (LoRA-adapted Qwen 2.5 3B) for Commander/EDH deck generation. The fine-tuned model is now trained **only on structured deck-building data**—all factual card knowledge lives in the local Prisma/SQLite databases and is fetched during inference instead of being memorized.
@@ -101,10 +109,11 @@ If any of those print `cpu`, stop—the Trainer run will never hit the Arc GPU.
 - **Memory**: BF16 mixed precision, gradient checkpointing
 - **Target modules**: q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj
 - **Sequence length**: 600 tokens (fits all v3 examples: 452-581 token range)
-- **Batch size**: 4 with gradient accumulation 8 (effective batch 32)
-- **Expected VRAM**: ~15GB / 16GB on Arc B50
-- **Expected duration**: 4-6 hours (if GPU actually used, currently unknown)
-- **GPU Issue**: Despite XPU config, training showing CPU usage patterns
+- **Batch size**: 1 with gradient accumulation 32 (effective batch 32)
+- **Actual VRAM**: ~14-15GB / 16GB on Arc B50 (batch 1 stable, batch 2+ OOM)
+- **Actual duration**: ~12-13 hours (3 epochs × ~4.5 hours each)
+- **Training speed**: 1.75 it/s (slower than batch 4 but stable)
+- **CRITICAL**: Batch 2+ fails OOM with 600 token sequences. Batch 4 worked with previous 4B model (675 tokens) but not 3B (600 tokens). Cause unknown. Always use batch 1 for safety.
 
 **Training Configuration** (`scripts/train-commander-model-optimized.py` - v2 DEPRECATED):
 - **LoRA**: rank=16, alpha=32, dropout=0.05
@@ -117,14 +126,16 @@ If any of those print `cpu`, stop—the Trainer run will never hit the Arc GPU.
 - **Result**: Completed successfully but failed validation (hallucinations)
 
 **Data Requirements (v3 - CURRENT)**:
-- **Dataset**: 23,405 structured examples from 6 sources
+- **Dataset**: 29,152 structured examples from 6 sources
 - **Format**: Instruction → Structured JSON output (not text decks)
 - **Sources**:
   * 2,557 EDHREC average decks (commander-specific patterns)
-  * 12,334 MTGGoldfish commander decks
-  * 3,759 Moxfield theme decks
-  * 4,289 Archidekt popular decks
-  * 466 MTGGoldfish archetype decks
+  * 21,854 MTGGoldfish commander decks (highest quality source)
+  * 4,063 Moxfield theme decks
+  * 101 TappedOut decks
+  * 179 Vehicles decks
+  * 60 Advanced decks
+  * 336 EDHTop16 decks
 - **Output Structure**:
   ```json
   {
@@ -136,12 +147,28 @@ If any of those print `cpu`, stop—the Trainer run will never hit the Arc GPU.
       "lands": {"count": 37, "filters": [{"types": ["Land"]}]},
       "creatures": {"count": 23, "filters": [{"subtypes": ["Dragon"]}]},
       "ramp": {"count": 13, "filters": [{"tags": ["ramp"], "cmc_max": 3}]}
+    }
   }
-}
-```
+  ```
 - **Key Insight**: Model learns deck-building patterns (land ratios, strategy coherence, power levels) but doesn't memorize card names. Database queries ensure valid cards only.
 - **Card knowledge lives elsewhere**: `data/training/deck_building_rules.json`, Prisma card tags, combo datasets. **Do not** add `card_knowledge.jsonl` back into v3 training; it undermines the "database handles facts" plan.
 - **Token Analysis**: All examples fit in 600 tokens (range 452-581, median 510)
+- **Strategy Distribution** (IMPROVED):
+  - midrange: 20,269 (69.5%) - Still dominant but much better
+  - tokens: 1,701 (5.8%) - 8.7x increase from v2
+  - aristocrats: 1,419 (4.9%) - 8.6x increase
+  - spellslinger: 382 (1.3%) - 3.6x increase
+  - artifacts: 304 (1.0%) - 4.8x increase
+  - superfriends: 264 (0.9%) - 24x increase
+  - enchantments: 134 (0.5%) - 33x increase
+  - Previous had 83.3% midrange due to weak detection
+- **Card Type Allocations** (CRITICAL FIX):
+  - **Spellslinger**: 20 instants + 15 sorceries + 12-16 creatures (was 0/0/45 - BUG)
+  - **Artifacts**: 25 artifacts + 15 creatures (was 0/35)
+  - **Enchantments**: 25 enchantments + 15 creatures (was 0/38)
+  - **Superfriends**: 15 planeswalkers + 18-27 creatures (was 0/42)
+  - Previous training had ALL non-functional cards as creatures - conversion script never created type-specific categories
+  - This caused spellslinger decks to generate 48 creatures + 10 spells instead of the reverse
 
 **Data Requirements (v2 - DEPRECATED)**:
 - **70/30 ratio**: 71% card knowledge (prevents hallucinations), 29% decks (teaches patterns)
@@ -194,7 +221,50 @@ python3 scripts/scrape-edhrec-combos.py
 python3 scripts/convert-to-v3-training.py
 # Analyzes card distributions, detects strategy, estimates power levels
 # Generates structured JSON outputs instead of text decks
-# Output: data/training/v3_structured_training.jsonl (23,405 examples)
+# Output: data/training/v3_structured_training.jsonl (29,152 examples)
+```
+
+**Enhanced Strategy Detection** (CRITICAL IMPROVEMENT):
+```python
+# Lines 131-266: Multi-signal strategy detection
+# 1. Commander-specific matching (20 points)
+#    - Hope Estheim → mill/lifegain
+#    - Talrand/Niv-Mizzet → spellslinger
+#    - Urza/Breya → artifacts
+#    - Atraxa → superfriends
+# 2. Card type composition (10 points)
+#    - 25+ instants/sorceries → spellslinger
+#    - 20+ artifacts → artifacts
+#    - 15+ enchantments → enchantments
+# 3. Indicator cards (10 points)
+#    - Blood Artist/Zulaport Cutthroat → aristocrats
+#    - Doubling Season/Parallel Lives → tokens
+#    - Thassa's Oracle/Consultation → combo
+# 4. Theme text matching (15 points)
+#    - "spellslinger" in theme → spellslinger
+#
+# Previous: Only checked theme text (weak, 83.3% mislabeled as midrange)
+# Current: Multi-signal scoring (better, 69.5% midrange with variety)
+```
+
+**Strategy-Specific Card Type Allocations** (CRITICAL FIX):
+```python
+# Lines 415-520: Strategy determines card types
+if strategy == 'spellslinger':
+    card_selection['instants'] = {'count': 20, 'filters': [...]}
+    card_selection['sorceries'] = {'count': 15, 'filters': [...]}
+    card_selection['creatures'] = {'count': 12, 'filters': [...]}
+elif strategy == 'artifacts':
+    card_selection['artifacts'] = {'count': 25, 'filters': [...]}
+    card_selection['creatures'] = {'count': 15, 'filters': [...]}
+elif strategy == 'enchantments':
+    card_selection['enchantments'] = {'count': 25, 'filters': [...]}
+elif strategy == 'superfriends':
+    card_selection['planeswalkers'] = {'count': 15, 'filters': [...]}
+
+# PREVIOUS BUG: Everything defaulted to creatures category
+# This caused spellslinger decks to have 45 creatures + 0 instants/sorceries
+# Now: Each strategy gets appropriate card types
 ```
 
 **Validation Rules**:
@@ -232,10 +302,17 @@ python3 scripts/convert-to-v3-training.py
 ```
 
 **Final Stats (v3 training - CURRENT)**:
-- Total examples: 23,405 structured outputs
-- Distribution: 81.8% midrange, 6.4% combo, 5% tribal
+- Total examples: 29,152 structured outputs
+- Strategy distribution: 69.5% midrange, 5.8% tokens, 4.9% aristocrats, 1.3% spellslinger, 1.0% artifacts, 0.9% superfriends, 0.5% enchantments
 - Bracket distribution: 53.6% bracket 2, 32.9% bracket 3, 13.5% bracket 4-5
 - Token lengths: 452-581 range (median 510, all fit in 600 tokens)
+- **Key improvements over v2**:
+  - Strategy detection: 83.3% → 69.5% midrange (better variety)
+  - Tokens: 195 → 1,701 examples (8.7x increase)
+  - Aristocrats: 165 → 1,419 (8.6x increase)
+  - Spellslinger: 106 → 382 (3.6x increase)
+  - Superfriends: 11 → 264 (24x increase)
+  - Enchantments: 4 → 134 (33x increase)
 
 **Final Stats (v2 training - DEPRECATED)**:
 - Total scraped: 22,197 validated decks
@@ -324,23 +401,48 @@ model = AutoModelForCausalLM.from_pretrained(
 model = ipex.optimize(model, dtype=torch.bfloat16)
 ```
 
-**CURRENT ISSUE - GPU NOT BEING USED FOR TRAINING**:
-- Arc B50 detected: ✅ `torch.xpu.is_available() = True`
-- Model loads on XPU: ✅ `device_map='xpu'` works
-- Inference on XPU: ✅ `model.generate()` works on xpu:0
-- **If training suddenly goes CPU-only**:
-  1. Stop the run immediately (no point waiting 30+ hours on CPU).
-  2. Re-source the virtualenv and export the XPU env vars listed above.
-  3. Confirm `ACCELERATE_USE_XPU=1` is set (`env | grep XPU`).
-  4. Run the two Python health checks (torch.xpu + PeftModel) to ensure parameters stay on `xpu:0`.
-  5. Restart training. Watch `intel_gpu_top` within the first minute—GPU utilization should spike >70% and VRAM should climb to ~15GB.
-  6. If Trainer still refuses to use XPU, fall back to the manual training loop (see `scripts/train-commander-model-optimized.py`) or port the v3 dataset into that manual loop. The manual loop sidesteps Accelerate entirely and reliably holds the Arc device.
+**VRAM CONSTRAINTS - CRITICAL**:
+- Intel Arc B50: 16GB total VRAM
+- API server uses 4.2GB when running (must stop during training)
+- Training with 600-token sequences:
+  - **Batch 1**: ~14-15GB VRAM ✅ STABLE
+  - **Batch 2+**: OOM crashes (UR_RESULT_ERROR_OUT_OF_RESOURCES)
+  - Previous 4B model with 675 tokens: Batch 4 worked (~15.2GB)
+  - Mystery: Batch 2 worked before with API running, now fails without it
+  - Cause: Likely VRAM fragmentation or backward pass memory growth
+  - **ALWAYS USE BATCH 1** for safety with gradient accumulation 32
 
-**VRAM Optimization Notes**:
-- Backward pass always uses more VRAM than forward pass; never assume you're safe just because the model loads.
-- v2 (675 tokens) pushed VRAM to ~15.2GB with batch 4—anything larger OOM'd.
-- v3 (600 tokens padded) sits around 14.5GB with batch 4 / grad-acc 8. You still need the env vars from above so Level Zero can grow memory pools (`expandable_segments`).
-- Monitor with `nvtop`, `intel_gpu_top`, or `scripts/monitor-combined.py` instead of assuming the Arc is busy.
+**Training Speed Comparison**:
+- Batch 1: 1.75 it/s (current - stable but slow)
+- Batch 4: ~7 it/s (previous model - 4x faster but OOMs now)
+- Duration impact: 12-13h vs potential 3-4h (but OOM risk not worth it)
+
+**GPU Monitoring**:
+```bash
+# Verify Arc GPU visible
+python - <<'PY'
+import torch
+print("xpu available:", torch.xpu.is_available())
+print("device count:", torch.xpu.device_count())
+PY
+
+# Monitor VRAM usage during training
+sudo intel_gpu_top -J -s 200 | head -40
+# Or use: watch -n 2 "ps -o pid,%cpu,%mem,cmd -p $(pgrep -f train-v3)"
+```
+
+**Common Training Failures**:
+1. **OOM during backward pass**: Batch size too large, reduce to 1
+2. **Training on CPU**: Virtualenv not activated or missing env vars:
+   ```bash
+   export ACCELERATE_USE_XPU=1
+   export USE_XPU=1
+   export ONEAPI_DEVICE_SELECTOR=level_zero:*
+   export SYCL_PI_LEVEL_ZERO_USE_IMMEDIATE_COMMANDLISTS=1
+   export PYTORCH_XPU_ALLOC_CONF="expandable_segments:True,max_split_size_mb:512"
+   ```
+3. **API server conflict**: Stop with `kill $(pgrep -f api-server.py)`
+4. **GPU device lost**: Reset driver or reboot if persistent
 
 ### Authentication & Roles
 - NextAuth.js with bcrypt for passwords
@@ -426,49 +528,92 @@ python3 scripts/build_deck_from_structure.py generated_decks/v3_test/ur-dragon-t
 ## Common Pitfalls
 
 1. **VRAM Exhaustion**: 
-   - Llama 8B won't fit (~17.5GB needed, 16GB available). Stick with Qwen 2.5 3B.
+   - ❌ Llama 8B won't fit (~17.5GB needed, 16GB available). Stick with Qwen 2.5 3B.
+   - ❌ Batch 2+ with 600-token sequences: OOMs during backward pass
+   - ❌ API server running during training: Uses 4.2GB VRAM, must stop it
+   - ✅ Use batch 1 with gradient accumulation 32 (effective batch 32, stable)
    - Intel Arc B50 has ~14-15GB usable (1-2GB reserved by system)
    - Backward pass uses MORE VRAM than forward pass
-   - Monitor with `nvtop` to see actual usage
+   - Monitor with `intel_gpu_top` to see actual usage
 
 2. **Dataset Imbalance**: 
-   - 50/50 causes hallucinations. Always use 70-80% card-to-deck ratio.
-   - v1 had 50/50: Generated fake cards and wrong counts
-   - v2 has 71/29: Should eliminate hallucinations
-   - **v2 Result**: FAILED - Model couldn't memorize 31k cards AND learn patterns
-   - **v3 Solution**: Model learns patterns only, no card memorization needed
+   - ❌ v1 (50/50 cards/decks): Caused hallucinations and wrong counts
+   - ❌ v2 (71/29 cards/decks): Model couldn't memorize 31k cards + patterns - FAILED
+   - ✅ v3 (100% deck patterns): Model learns ratios/strategies, database provides cards - WORKS
+   - **Never mix card knowledge into training** - it undermines the database-driven approach
 
-3. **Sequence Length Truncation**:
-   - Default 384 tokens truncates 25-52% of deck content
-   - Commander decks need 510-793 tokens (avg 637)
-   - ALWAYS use MAX_SEQ_LENGTH=675 for full decks
-   - Run token analysis before long training runs
+3. **Strategy Detection Failures**:
+   - ❌ Theme-only detection: 83.3% mislabeled as "midrange"
+   - ✅ Multi-signal detection: Commander matching + card composition + indicators = 69.5% midrange
+   - ❌ Generic creatures category: Spellslinger decks had 48 creatures, 10 spells
+   - ✅ Strategy-specific types: Spellslinger gets 20 instants + 15 sorceries + 16 creatures
 
-4. **Missing Validation**: 
+4. **Sequence Length Truncation**:
+   - ❌ Default 384 tokens: Truncates 25-52% of deck content
+   - ❌ 675 tokens: Fit previous dataset but OOM with batch 4 on 3B model
+   - ✅ 600 tokens: Fits all v3 examples (452-581 range), works with batch 1
+   - ALWAYS run token analysis before long training runs
+
+5. **Missing Validation**: 
    - Scraper must check `total_cards == 100` and `total_mainboard == (100 - num_commanders)`
    - Validate by quantity sum, not line count (handles "27 Swamp")
    - Commander section required in output
 
-5. **Virtualenv Not Activated**:
+6. **Virtualenv Not Activated**:
    - PyTorch XPU only in virtualenv: `source ~/.virtualenvs/magicapp/bin/activate`
    - System Python doesn't have torch module
    - Training fails immediately without virtualenv
 
-6. **Batch Size Too Aggressive**:
-   - BATCH_SIZE=24: OOM during forward pass (~14GB)
-   - BATCH_SIZE=16: OOM during backward pass (~10.5GB)
-   - BATCH_SIZE=12: OOM during backward pass (~9GB)
-   - BATCH_SIZE=8 with seq 675: OOM (~14GB)
-   - **Safe**: BATCH_SIZE=4 with seq 675 (~15.2GB = 93% utilization)
+7. **Batch Size Mysteries**:
+   - ❌ BATCH_SIZE=24: OOM during forward pass (~14GB)
+   - ❌ BATCH_SIZE=16: OOM during backward pass (~10.5GB)
+   - ❌ BATCH_SIZE=12: OOM during backward pass (~9GB)
+   - ❌ BATCH_SIZE=8 with seq 675: OOM (~14GB)
+   - ❌ BATCH_SIZE=4 with seq 600 (3B model): OOM (mystery - worked on 4B model)
+   - ❌ BATCH_SIZE=2 with seq 600: OOM (mystery - worked before with API running)
+   - ✅ BATCH_SIZE=1 with seq 600: Stable at ~14-15GB (93% utilization)
+   - Cause unknown: Possibly VRAM fragmentation or different memory patterns between models
 
-7. **Remote Sessions**:
+8. **Remote Sessions**:
    - GNOME RDP sessions don't persist on disconnect
    - Use `nohup` for long-running training
    - VS Code Remote-SSH maintains connection better
 
-8. **Duplicate Deck Prevention**: 
+9. **Duplicate Deck Prevention**: 
    - Scraper tracks `self.scraped_ids` to avoid re-scraping
    - "0/32 new decks" = all duplicates, already collected
+
+## Things That Don't Work (DO NOT RETRY)
+
+1. **V2 Mixed Dataset Approach**: Tried 70/30 card knowledge/deck patterns. Model couldn't memorize 31k cards AND learn patterns. Result: Hallucinations, wrong counts, failed validation. **Solution**: V3 pure deck patterns + database queries.
+
+2. **Large Batch Sizes**: Batch 2-4 all OOM with 600-token sequences on Arc B50, even with API stopped. Previous 4B model handled batch 4 with 675 tokens, but 3B model can't. **Solution**: Always use batch 1 + gradient accumulation 32.
+
+3. **API Server During Training**: Uses 4.2GB VRAM, causes OOM when training. **Solution**: Stop with `kill $(pgrep -f api-server.py)` before training.
+
+4. **Generic Card Type Categories**: Everything defaulted to "creatures" category. Spellslinger decks had 48 creatures, 10 instants/sorceries. **Solution**: Strategy-specific allocations (spellslinger → instants/sorceries, artifacts → artifacts, etc.).
+
+5. **Theme-Only Strategy Detection**: Checked only deck theme text, 83.3% labeled "midrange". **Solution**: Multi-signal detection with commander matching, card composition analysis, and indicator cards.
+
+6. **Llama 8B Models**: Need ~17.5GB VRAM, Arc B50 only has 16GB. Even with quantization, OOMs. **Solution**: Stick with Qwen 2.5 3B (6.5GB base).
+
+7. **Frontend 60s Timeout**: Model generation takes ~90s, browser timed out with "Unexpected token '<'" errors. **Solution**: Increased to 180s (3 minutes) in fetch call.
+
+## What Actually Works
+
+1. **V3 Dataset Structure**: Model outputs structured JSON filters, database fills actual cards. Zero hallucinations, all cards validated.
+
+2. **Batch 1 + Gradient Accumulation 32**: Stable at ~14-15GB VRAM, effective batch 32, completes in 12-13 hours.
+
+3. **Strategy-Specific Card Types**: Spellslinger gets instants/sorceries, artifacts get artifacts, superfriends get planeswalkers. Proper deck composition.
+
+4. **Multi-Signal Strategy Detection**: Commander matching (20 pts) + card composition (10 pts) + indicator cards (10 pts) + theme text (15 pts). Better variety: 69.5% midrange vs 83.3%.
+
+5. **600 Token Sequences**: Fits all v3 examples (452-581 range) without truncation, leaves VRAM headroom.
+
+6. **Qwen 2.5 3B Base Model**: 3.09B params, 6.5GB base, leaves room for LoRA and training overhead.
+
+7. **Frontend 180s Timeout**: Handles model generation time comfortably, good error messages on failures.
 
 ## Development Commands
 

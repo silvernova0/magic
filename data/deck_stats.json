@@ -1,0 +1,92 @@
+{
+  "global": {
+    "creatures": {
+      "avg": 26.8,
+      "min": 6,
+      "max": 41,
+      "std_dev": 9.2
+    },
+    "instants": {
+      "avg": 9.9,
+      "min": 1,
+      "max": 22,
+      "std_dev": 4.9
+    },
+    "sorceries": {
+      "avg": 7.2,
+      "min": 1,
+      "max": 15,
+      "std_dev": 3.2
+    },
+    "artifacts": {
+      "avg": 11.6,
+      "min": 0,
+      "max": 26,
+      "std_dev": 5.9
+    },
+    "enchantments": {
+      "avg": 6.6,
+      "min": 0,
+      "max": 15,
+      "std_dev": 3.6
+    },
+    "planeswalkers": {
+      "avg": 0.5,
+      "min": 0,
+      "max": 2,
+      "std_dev": 0.8
+    },
+    "lands": {
+      "avg": 36.1,
+      "min": 32,
+      "max": 41,
+      "std_dev": 2.3
+    }
+  },
+  "by_theme": {
+    "Midrange": {
+      "creatures": {
+        "avg": 26.9,
+        "min": 6,
+        "max": 41,
+        "std_dev": 9.5
+      },
+      "instants": {
+        "avg": 9.4,
+        "min": 1,
+        "max": 22,
+        "std_dev": 4.6
+      },
+      "sorceries": {
+        "avg": 7.0,
+        "min": 1,
+        "max": 15,
+        "std_dev": 3.1
+      },
+      "artifacts": {
+        "avg": 12.2,
+        "min": 5,
+        "max": 26,
+        "std_dev": 5.3
+      },
+      "enchantments": {
+        "avg": 6.8,
+        "min": 0,
+        "max": 15,
+        "std_dev": 3.6
+      },
+      "planeswalkers": {
+        "avg": 0.5,
+        "min": 0,
+        "max": 2,
+        "std_dev": 0.8
+      },
+      "lands": {
+        "avg": 36.1,
+        "min": 32,
+        "max": 41,
+        "std_dev": 2.4
+      }
+    }
+  }
+}

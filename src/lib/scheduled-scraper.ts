@@ -58,37 +58,37 @@ async function runEDHRECJob() {
   console.log('\n🔄 [SCHEDULED] Starting EDHREC scraping job...');
   const startTime = Date.now();
   const job = await createScrapeJob('edhrec');
-  
+
   try {
     const data = await scrapeEDHREC();
-    
+
     // Count items scraped
     let itemsScraped = 0;
     if (data.topCommanders) {
       itemsScraped += data.topCommanders.length;
     }
-    
+
     const duration = Date.now() - startTime;
-    
+
     await updateScrapeJob(job.id, {
       success: true,
       itemsScraped,
       errors: [],
       duration,
     });
-    
+
     console.log(`✅ [SCHEDULED] EDHREC job completed: ${itemsScraped} items in ${(duration / 1000).toFixed(1)}s`);
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+
     await updateScrapeJob(job.id, {
       success: false,
       itemsScraped: 0,
       errors: [errorMessage],
       duration,
     });
-    
+
     console.error(`❌ [SCHEDULED] EDHREC job failed:`, error);
   }
 }
@@ -101,33 +101,33 @@ async function runMTGTop8Job() {
   console.log('\n🔄 [SCHEDULED] Starting MTGTop8 scraping job...');
   const startTime = Date.now();
   const job = await createScrapeJob('mtgtop8');
-  
+
   try {
     const data = await scrapeMTGTop8();
-    
+
     // Count items scraped
     const itemsScraped = data.recentDecks?.length || 0;
     const duration = Date.now() - startTime;
-    
+
     await updateScrapeJob(job.id, {
       success: true,
       itemsScraped,
       errors: [],
       duration,
     });
-    
+
     console.log(`✅ [SCHEDULED] MTGTop8 job completed: ${itemsScraped} items in ${(duration / 1000).toFixed(1)}s`);
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+
     await updateScrapeJob(job.id, {
       success: false,
       itemsScraped: 0,
       errors: [errorMessage],
       duration,
     });
-    
+
     console.error(`❌ [SCHEDULED] MTGTop8 job failed:`, error);
   }
 }
@@ -140,37 +140,37 @@ async function runMoxfieldJob() {
   console.log('\n🔄 [SCHEDULED] Starting Moxfield scraping job...');
   const startTime = Date.now();
   const job = await createScrapeJob('moxfield');
-  
+
   try {
     const data = await scrapeMoxfield();
-    
+
     // Count items scraped
     let itemsScraped = 0;
     if (data.topDecksByBracket) {
       itemsScraped = Object.values(data.topDecksByBracket).flat().length;
     }
-    
+
     const duration = Date.now() - startTime;
-    
+
     await updateScrapeJob(job.id, {
       success: true,
       itemsScraped,
       errors: [],
       duration,
     });
-    
+
     console.log(`✅ [SCHEDULED] Moxfield job completed: ${itemsScraped} items in ${(duration / 1000).toFixed(1)}s`);
   } catch (error) {
     const duration = Date.now() - startTime;
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+
     await updateScrapeJob(job.id, {
       success: false,
       itemsScraped: 0,
       errors: [errorMessage],
       duration,
     });
-    
+
     console.error(`❌ [SCHEDULED] Moxfield job failed:`, error);
   }
 }
@@ -188,42 +188,90 @@ async function runMoxfieldJob() {
  */
 export function initializeScheduledJobs() {
   console.log('🚀 Initializing scheduled scraping jobs...\n');
-  
+
   // EDHREC: Every Sunday at 3:00 AM
   // Synergy data changes slowly, weekly updates are sufficient
   const edhrecJob = schedule.scheduleJob('0 0 3 * * 0', () => {
     runEDHRECJob();
   });
   console.log('📅 EDHREC job scheduled: Every Sunday at 3:00 AM');
-  
+
   // MTGTop8: Every 3 days at 2:00 AM
   // Tournament data updates regularly but not daily
   const mtgtop8Job = schedule.scheduleJob('0 0 2 */3 * *', () => {
     runMTGTop8Job();
   });
   console.log('📅 MTGTop8 job scheduled: Every 3 days at 2:00 AM');
-  
+
   // Moxfield: Every day at 1:00 AM
   // Community decks update frequently, daily scraping keeps data fresh
   const moxfieldJob = schedule.scheduleJob('0 0 1 * * *', () => {
     runMoxfieldJob();
   });
   console.log('📅 Moxfield job scheduled: Every day at 1:00 AM');
-  
+
+  // Scryfall: Every day at Midnight (00:00 AM)
+  // Ensures new cards are available before deck scrapers run
+  const scryfallJob = schedule.scheduleJob('0 0 0 * * *', () => {
+    runScryfallJob();
+  });
+  console.log('📅 Scryfall job scheduled: Every day at Midnight (00:00 AM)');
+
   console.log('\n✅ All scheduled jobs initialized!');
   console.log('📊 Use GET /api/scrape/jobs to view job history\n');
-  
+
   return {
     edhrec: edhrecJob,
     mtgtop8: mtgtop8Job,
     moxfield: moxfieldJob,
+    scryfall: scryfallJob,
   };
+}
+
+/**
+ * Scryfall import job - runs daily at Midnight
+ * Downloads full bulk data to ensure new sets are ingested
+ */
+async function runScryfallJob() {
+  console.log('\n🔄 [SCHEDULED] Starting Scryfall import job...');
+  const startTime = Date.now();
+  const job = await createScrapeJob('scryfall');
+
+  try {
+    // Dynamically import to avoid circular dependencies or load issues
+    const { importScryfallBulkData } = await import('../../scripts/import-scryfall');
+
+    await importScryfallBulkData();
+
+    const duration = Date.now() - startTime;
+
+    await updateScrapeJob(job.id, {
+      success: true,
+      itemsScraped: 1, // Represents 1 full bulk file
+      errors: [],
+      duration,
+    });
+
+    console.log(`✅ [SCHEDULED] Scryfall job completed in ${(duration / 1000 / 60).toFixed(2)}m`);
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    await updateScrapeJob(job.id, {
+      success: false,
+      itemsScraped: 0,
+      errors: [errorMessage],
+      duration,
+    });
+
+    console.error(`❌ [SCHEDULED] Scryfall job failed:`, error);
+  }
 }
 
 /**
  * Run a job immediately (for testing or manual triggers)
  */
-export async function runJobNow(jobType: 'edhrec' | 'mtgtop8' | 'moxfield') {
+export async function runJobNow(jobType: 'edhrec' | 'mtgtop8' | 'moxfield' | 'scryfall') {
   switch (jobType) {
     case 'edhrec':
       await runEDHRECJob();
@@ -233,6 +281,9 @@ export async function runJobNow(jobType: 'edhrec' | 'mtgtop8' | 'moxfield') {
       break;
     case 'moxfield':
       await runMoxfieldJob();
+      break;
+    case 'scryfall':
+      await runScryfallJob();
       break;
     default:
       throw new Error(`Unknown job type: ${jobType}`);
@@ -258,14 +309,14 @@ export async function getJobStats(jobType: string) {
     orderBy: { startedAt: 'desc' },
     take: 10,
   });
-  
+
   const completed = jobs.filter(j => j.status === 'completed').length;
   const failed = jobs.filter(j => j.status === 'failed').length;
   const avgDuration = jobs
     .filter(j => j.duration)
     .reduce((sum, j) => sum + (j.duration || 0), 0) / jobs.length || 0;
   const totalItemsScraped = jobs.reduce((sum, j) => sum + j.itemsScraped, 0);
-  
+
   return {
     jobType,
     totalRuns: jobs.length,

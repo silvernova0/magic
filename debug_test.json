@@ -1,0 +1,26 @@
+{
+    "commander": "Talrand, Sky Summoner",
+    "strategy": "Midrange",
+    "power_level": 5,
+    "bracket": 3,
+    "card_selection": {
+        "creatures": [
+            "Murmuring Mystic"
+        ],
+        "instants": [
+            "Opt"
+        ],
+        "sorceries": [
+            "Preordain"
+        ],
+        "artifacts": [
+            "Isochron Scepter"
+        ],
+        "lands": [
+            "Island"
+        ]
+    },
+    "color_restrictions": [
+        "U"
+    ]
+}

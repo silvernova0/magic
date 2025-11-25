@@ -1,0 +1,269 @@
+Loading structure from generated_decks/temp/cmh3e3tnd0002mc68b0w8u5yj-1764017922998.json...
+DEBUG: CWD is /home/social/magicapp
+DEBUG: Opening DB at /home/social/magicapp/prisma/dev.db
+📊 Loaded deck statistics from data/deck_stats.json
+✅ Connected to database: /home/social/magicapp/prisma/dev.db
+
+======================================================================
+Building deck: Commander Mustard
+Strategy: kindred_-_soldiers
+Power Level: 3
+======================================================================
+
+   ⚔️  Tribal Strategy Detected: Enforcing 'Soldier' for priority creatures
+🎨 Using provided color restrictions: {'W', 'R'}
+🎨 Commander Color Identity: Red, White (R/W)
+
+📊 MODEL CARD ALLOCATION:
+   artifacts: 28 cards
+   creatures: 50 cards
+   enchantments: 16 cards
+   instants: 1 cards
+   lands: 35 cards
+   sorceries: 1 cards
+   ==================================================
+   TOTAL: 131 cards (target: 99)
+
+⚠️  WARNING: Model allocated 131/99 cards - will trim extras!
+
+
+======================================================================
+PHASE 1: Querying non-land cards to analyze mana requirements
+======================================================================
+
+   🔎 Processing creatures (count: 50) with filters: [{'tags': ['creature'], 'subtypes': ['Soldier'], 'reason': 'Accelerate gameplan with soldier creatures'}, {'tags': ['combat', 'removal'], 'reason': 'Answer threats and respond to dangers'}]
+🔍 creatures: requesting 50 cards...
+      ❌ Rejected Kozilek, Butcher of Truth (Not a Soldier)
+      ❌ Rejected Drakuseth, Maw of Flames (Not a Soldier)
+      ❌ Rejected Ojer Taq, Deepest Foundation // Temple of Civilization (Not a Soldier)
+      ❌ Rejected Krenko, Tin Street Kingpin (Not a Soldier)
+      ❌ Rejected Loran of the Third Path (Not a Soldier)
+      ❌ Rejected Archon of Sun's Grace (Not a Soldier)
+      ❌ Rejected Captain Lannery Storm (Not a Soldier)
+      ❌ Rejected Walking Ballista (Not a Soldier)
+      ❌ Rejected Cavern-Hoard Dragon (Not a Soldier)
+      ❌ Rejected It That Betrays (Not a Soldier)
+      ❌ Rejected Knight of the White Orchid (Not a Soldier)
+      ❌ Rejected Hellkite Tyrant (Not a Soldier)
+      ❌ Rejected Myr Battlesphere (Not a Soldier)
+      ❌ Rejected Aurelia, the Warleader (Not a Soldier)
+      ❌ Rejected Mondrak, Glory Dominus (Not a Soldier)
+      ❌ Rejected Purphoros, God of the Forge (Not a Soldier)
+      ❌ Rejected Sun Titan (Not a Soldier)
+      ❌ Rejected Ulamog, the Ceaseless Hunger (Not a Soldier)
+      ❌ Rejected Ragavan, Nimble Pilferer (Not a Soldier)
+   ✅ Added 31 cards to creatures
+   🔎 Processing instants (count: 1) with filters: [{'tags': ['instant'], 'reason': 'Instant speed triggers'}]
+🔍 instants: requesting 1 cards...
+   ✅ Added 0 cards to instants
+   🔎 Processing sorceries (count: 1) with filters: [{'tags': ['sorcery'], 'reason': 'Sorcery speed milestones'}]
+🔍 sorceries: requesting 1 cards...
+   ✅ Added 0 cards to sorceries
+   🔎 Processing artifacts (count: 28) with filters: [{'tags': ['artifact'], 'reason': 'Artifact magic augment abilities'}]
+🔍 artifacts: requesting 28 cards...
+   📊 Found 80 total, 6 already used, 74 available
+      ❌ Rejected Academy Manufactor (Not a Soldier)
+      ❌ Rejected Ornithopter of Paradise (Not a Soldier)
+      ❌ Rejected Psychosis Crawler (Not a Soldier)
+      ❌ Rejected Meteor Golem (Not a Soldier)
+   ✅ Added 24 cards to artifacts
+   🔎 Processing enchantments (count: 16) with filters: [{'tags': ['enchantment'], 'reason': 'Enchantress effects support strategy'}]
+🔍 enchantments: requesting 16 cards...
+   📊 Found 43 total, 5 already used, 38 available
+      ❌ Rejected Heliod, Sun-Crowned (Not a Soldier)
+      ❌ Rejected Spirited Companion (Not a Soldier)
+   ✅ Added 14 cards to enchantments
+DEBUG: deck_cards size after Phase 1: 69
+
+======================================================================
+PHASE 2: Analyzing mana requirements
+======================================================================
+
+
+======================================================================
+PHASE 3: Building mana base
+======================================================================
+
+📊 Using Commander Mustard training data (bracket 3): 34-34 lands (avg: 34.0, 10 samples)
+ℹ️  Model allocated 35 lands (slightly above historical max 34, allowing)
+ℹ️  Respecting high land allocation (35) for strategy/preference
+💰 Budget deck (bracket 3, power 3) - 15 basics, ~10 non-basics
+💎 15 basics (even distribution)
+🔍 Requesting 20 non-basic lands...
+   ✅ Added 20/20 non-basic lands
+DEBUG: deck_cards size after Non-Basics: 104
+   📊 Total lands: 35 (15 basics + 20 non-basics)
+
+🌟 Validating 20 priority cards...
+   ⚠️  Rejected Archangel of Tithes: Creature does not match tribal type 'Soldier'
+   ⚠️  Rejected Arid Mesa: Land produces/fetches off-color mana
+   ⚠️  Rejected Firebrand Archer: Creature does not match tribal type 'Soldier'
+   ⚠️  Rejected Goblin Cratermaker: Creature does not match tribal type 'Soldier'
+   ⚠️  Rejected Ornithopter: Creature does not match tribal type 'Soldier'
+   ✅ Intelligently inserting 13 priority cards...
+      🔄 Replacing Shiny Impetus with Authority of the Consuls
+      🔄 Replacing Charismatic Conqueror with Bastion Protector
+      🔄 Replacing Plains with Battlefield Forge
+      🔄 Replacing Impact Tremors with Blind Obedience
+      🔄 Replacing Shared Animosity with Cathars' Crusade
+      🔄 Replacing Sword of Feast and Famine with Chromatic Lantern
+      🔄 Replacing Idol of Oblivion with Darksteel Ingot
+      🔄 Replacing Mountain with Exotic Orchard
+      🔄 Replacing Excalibur, Sword of Eden with Fellwar Stone
+      🔄 Replacing Soul-Guide Lantern with Jeweled Amulet
+      🔄 Replacing Mask of Memory with Mox Amber
+      🔄 Replacing Plains with Sacred Foundry
+      🔄 Replacing Mana Vault with Sol Ring
+   📊 13 cards replaced, 0 cards added
+DEBUG: deck_cards size after Priority: 104
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+DEBUG: Removing duplicate: Command Tower
+
+⚠️  Deck has 85 cards, need 14 more to reach 99
+   🛡️  Removed 3 high-power cards (Bracket 3)
+   📊 Current Non-Land Count: 66/63
+
+======================================================================
+PHASE 4: Synergy Injection
+======================================================================
+
+   💡 Found 1 potential synergy additions: ['Dramatic Reversal']
+      ❌ Rejected Dramatic Reversal (Color mismatch)
+   ✅ Added 0 synergy cards
+DEBUG: deck_cards size after Synergy: 82
+   📊 Using data-driven target for lands: 36 (Theme: kindred_-_soldiers)
+   📊 Current Lands: 16 (Non-basics: 4)
+   ⚠️  Target lands 36 exceeds available slots 33. Capped.
+   Build Land Base: Injecting 10 non-basic lands...
+   ✅ Injected 7 non-basic lands
+DEBUG: deck_cards size after Land Base: 89
+   ⚠️  Filled with 10 basic lands to reach 99
+☢️  Removed Command Tower // Command Tower during final sanitization
+
+======================================================================
+FINAL DECK:
+======================================================================
+
+Commander: Commander Mustard
+
+Deck Name: kindred_-_soldiers - Commander Mustard
+Strategy: kindred_-_soldiers
+Power Level: 3
+Bracket: 3
+
+Decklist:
+
+1x Aetherflux Reservoir
+1x Aggravated Assault
+1x Altar of Dementia
+1x Anointed Procession
+1x Arcane Signet
+1x Ashnod's Altar
+1x Authority of the Consuls
+1x Basalt Monolith
+1x Basilisk Collar
+1x Bastion Protector
+1x Battlefield Forge
+1x Blind Obedience
+1x Boros Charm
+1x Cathars' Crusade
+1x Chromatic Lantern
+1x City on Fire
+1x Command Tower
+1x Commander's Sphere
+1x Crucible of Worlds
+1x Curse of Opulence
+1x Darksteel Ingot
+1x Darksteel Mutation
+1x Delayed Blast Fireball
+1x Disenchant
+1x Duelist's Heritage
+1x Eldrazi Monument
+1x Emerald Medallion
+1x Ephemerate
+1x Ethereal Armor
+1x Evolving Wilds
+1x Exotic Orchard
+1x Felidar Retreat
+1x Fellwar Stone
+1x Fiery Inscription
+1x Fireshrieker
+1x Flare of Fortitude
+1x Generous Gift
+1x Goblin Bombardment
+1x Great Train Heist
+1x Herald's Horn
+1x Isochron Scepter
+1x Jet Medallion
+1x Jeweled Amulet
+1x Lightning Bolt
+1x Loxodon Warhammer
+1x Mantle of the Ancients
+1x Maskwood Nexus
+1x Mind Stone
+1x Mizzix's Mastery
+11x Mountain
+1x Mox Amber
+1x Myriad Landscape
+1x Patchwork Banner
+1x Path of Ancestry
+1x Path to Exile
+1x Phyrexian Altar
+11x Plains
+1x Red Elemental Blast
+1x Relic of Legends
+1x Reliquary Tower
+1x Rising of the Day
+1x Rogue's Passage
+1x Sacred Foundry
+1x Shadowspear
+1x Sigil of the Empty Throne
+1x Sol Ring
+1x Springleaf Drum
+1x Staff of Compleation
+1x Stroke of Midnight
+1x Swiftfoot Boots
+1x Talisman of Conviction
+1x Temur Battle Rage
+1x Terramorphic Expanse
+1x The Reaver Cleaver
+1x Tocasia's Welcome
+1x Trouble in Pairs
+1x Whispersilk Cloak
+1x Worn Powerstone
+
+Total: 99 cards
+
+💾 Deck saved to: generated_decks/v3_executed/cmh3e3tnd0002mc68b0w8u5yj-1764017922998_deck.txt
+
+======================================================================
+DECK BREAKDOWN BY TYPE:
+======================================================================
+Commander: 1x Commander Mustard
+Creatures: 1
+Instants: 12
+Sorceries: 1
+Artifacts: 34
+Enchantments: 18
+Lands: 32
+Total: 99 cards (including commander)
+======================================================================
+
+💾 JSON saved to: generated_decks/v3_executed/cmh3e3tnd0002mc68b0w8u5yj-1764017922998_deck.json

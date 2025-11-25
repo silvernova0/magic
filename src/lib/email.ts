@@ -1,28 +1,75 @@
 import nodemailer from 'nodemailer';
+import { prisma } from '@/lib/prisma';
 
-// Email configuration
-const EMAIL_CONFIG = {
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT || '587'),
-  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+// Email configuration interface
+interface EmailConfig {
+  host: string;
+  port: number;
+  secure: boolean;
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-};
+    user: string;
+    pass: string;
+  };
+  from?: string;
+}
 
-// Create reusable transporter
-let transporter: nodemailer.Transporter | null = null;
+// Fetch settings from DB or fallback to Env
+async function getEmailConfig(): Promise<EmailConfig | null> {
+  try {
+    const settings = await prisma.systemSetting.findMany({
+      where: {
+        key: {
+          in: ['EMAIL_HOST', 'EMAIL_PORT', 'EMAIL_SECURE', 'EMAIL_USER', 'EMAIL_PASSWORD', 'EMAIL_FROM']
+        }
+      }
+    });
 
-function getTransporter() {
-  if (!transporter) {
-    if (!EMAIL_CONFIG.auth.user || !EMAIL_CONFIG.auth.pass) {
-      console.warn('Email credentials not configured. Emails will not be sent.');
+    const dbConfig: Record<string, string> = {};
+    settings.forEach(s => dbConfig[s.key] = s.value);
+
+    const host = dbConfig.EMAIL_HOST || process.env.EMAIL_HOST || 'smtp.gmail.com';
+    const port = parseInt(dbConfig.EMAIL_PORT || process.env.EMAIL_PORT || '587');
+    const secure = dbConfig.EMAIL_SECURE === 'true' || process.env.EMAIL_SECURE === 'true';
+    const user = dbConfig.EMAIL_USER || process.env.EMAIL_USER;
+    const pass = dbConfig.EMAIL_PASSWORD || process.env.EMAIL_PASSWORD;
+    const from = dbConfig.EMAIL_FROM || process.env.EMAIL_FROM;
+
+    if (!user || !pass) {
       return null;
     }
-    transporter = nodemailer.createTransport(EMAIL_CONFIG);
+
+    return {
+      host,
+      port,
+      secure,
+      auth: { user, pass },
+      from
+    };
+  } catch (error) {
+    console.error('Error fetching email settings:', error);
+    // Fallback to env if DB fails
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) return null;
+    return {
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.EMAIL_PORT || '587'),
+      secure: process.env.EMAIL_SECURE === 'true',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD,
+      },
+      from: process.env.EMAIL_FROM
+    };
   }
-  return transporter;
+}
+
+// Create transporter dynamically
+async function getTransporter() {
+  const config = await getEmailConfig();
+  if (!config) {
+    console.warn('Email credentials not configured. Emails will not be sent.');
+    return null;
+  }
+  return nodemailer.createTransport(config);
 }
 
 // Email templates
@@ -112,16 +159,20 @@ export async function sendEmail(
   html: string,
   from?: string
 ): Promise<boolean> {
-  const transport = getTransporter();
-  
+  const transport = await getTransporter();
+
   if (!transport) {
     console.log('Email not sent (not configured):', { to, subject });
     return false;
   }
 
   try {
+    // Get config again to check for 'from' override if not provided
+    const config = await getEmailConfig();
+    const defaultFrom = config?.from || process.env.EMAIL_FROM || config?.auth.user;
+
     const info = await transport.sendMail({
-      from: from || process.env.EMAIL_FROM || EMAIL_CONFIG.auth.user,
+      from: from || defaultFrom,
       to,
       subject,
       html,
@@ -173,12 +224,12 @@ export async function sendAdminNotification(subject: string, message: string) {
 
 // Test email configuration
 export async function testEmailConfig(): Promise<{ success: boolean; message: string }> {
-  const transport = getTransporter();
-  
+  const transport = await getTransporter();
+
   if (!transport) {
     return {
       success: false,
-      message: 'Email not configured. Please set EMAIL_USER and EMAIL_PASSWORD in .env',
+      message: 'Email not configured. Please set settings in Admin Panel or .env',
     };
   }
 
