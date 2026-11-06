@@ -1,0 +1,32 @@
+services:
+  jankbuild:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jankbuild
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "3050:3000"  # Map internal port 3000 to host port 3050
+    environment:
+      - NODE_ENV=production
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3050}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-local-ai}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-jankbuild-commander}
+      - DATABASE_URL=file:./prisma/dev.db
+    volumes:
+      - ./prisma:/app/prisma
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: jankbuild-network
