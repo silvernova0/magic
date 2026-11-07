@@ -5,6 +5,24 @@ All notable changes to the JankBuild (`magicapp`) MTG Commander Deck Builder + L
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-11-06
+
+### Added
+- **40-Card Limited Deck Builder (Draft / Sealed)**:
+  - New `/deckbuilder` mode allowing card pool pasting (Arena / MTGO format), pool filtering, land-ratio auto-calculation (17 lands standard), and full deck export.
+  - Dedicated `/api/limited/build` endpoint and `src/lib/limited.ts` algorithm.
+- **Fast Build Mode**: Added instantaneous (<100ms) algorithmic deck generation toggle skipping LLM reasoning when speed is preferred.
+- **Production SMTP2GO Relay**: Configured authenticated transactional email delivery (`mail.smtp2go.com:2525`) sender `noreply@jankbuild.com`.
+
+### Security Hardening
+- **Purged Default Demo Accounts**: Removed seeded `admin@example.com` and `test-collection@example.com` accounts from production SQLite DB.
+- **Route Authorization**: Protected admin-sensitive endpoints (`POST /api/scrape/jobs` and `POST /api/admin/test-email`) with `isAdmin()` session checks returning 401 Unauthorized for non-admins.
+- **SSH Hardening**: Enforced public-key-only authentication on `magicapp-01` (`PasswordAuthentication no`).
+- **Firewall (UFW)**: Configured default-deny ingress firewall on `magicapp-01`, permitting only ports 22 (SSH) and 3050 (Next.js).
+
+### Fixed
+- **Card Database Browser Null Handling**: Added defensive null-coalescing on `powerLevel` and expanded `/api/cards/search` response to include calculated powerLevel, saltScore, card types, and tags.
+
 ## [0.1.0] - 2026-11-04
 
 ### Added
